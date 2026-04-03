@@ -10,11 +10,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
+    const importCsvBtn = document.getElementById('importCsv');
+    const importCsvFile = document.getElementById('importCsvFile');
+    const clearDataBtn = document.getElementById('clearData');
+    const testsetSelect = document.getElementById('testsetSelect');
+    const loadTestsetBtn = document.getElementById('loadTestset');
+    const runTestsetBtn = document.getElementById('runTestset');
+    const copyPermalinkBtn = document.getElementById('copyPermalink');
+    const diagramScaling = document.getElementById('diagram-scaling');
+    const diagramImg = document.getElementById('diagram-img');
+    const testsetInfo = document.getElementById('testsetInfo');
     const connectBtn = document.getElementById('connectBtn');
     const statusLabel = document.getElementById('statusLabel');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
+    const testerTable = document.querySelector('.tester-table');
+
+    // Column visibility toggles
+    ['uio_in', 'uio_out', 'uio_oe'].forEach(col => {
+        const toggle = document.getElementById(`toggle-${col}`);
+        toggle.addEventListener('change', () => {
+            if (toggle.checked) {
+                testerTable.classList.remove(`hide-${col}`);
+            } else {
+                testerTable.classList.add(`hide-${col}`);
+            }
+            updateDiagram();
+        });
+    });
     const historyData = [];
+    let currentTestset = null;
+
+    function updateURLParameter(projectName) {
+        const url = new URL(window.location.href);
+        if (projectName) {
+            url.searchParams.set('project', projectName);
+        } else {
+            url.searchParams.delete('project');
+        }
+        window.history.pushState({}, '', url);
+    }
 
     let port = null;
     let reader = null;
@@ -49,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
                        uio_oe.toString(16).padStart(2, '0').toUpperCase();
             }
 
-            // Short/Long formats would go here, but let's stick to Compact for the main logic
             return 'error';
         }
     };
@@ -136,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         row.appendChild(uiInTd);
 
         const uioInTd = document.createElement('td');
+        uioInTd.className = 'col-uio_in';
         uioInTd.appendChild(createBitDisplay(inputs.uio_in));
         row.appendChild(uioInTd);
 
@@ -150,10 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
         row.appendChild(uoOutTd);
 
         const uioOutTd = document.createElement('td');
+        uioOutTd.className = 'col-uio_out';
         uioOutTd.appendChild(createBitDisplay(outputs.uio_out));
         row.appendChild(uioOutTd);
 
         const uioOeTd = document.createElement('td');
+        uioOeTd.className = 'col-uio_oe';
         uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
         row.appendChild(uioOeTd);
 
@@ -164,30 +201,108 @@ document.addEventListener('DOMContentLoaded', () => {
         historyBody.prepend(row);
     }
 
+    function formatFP8(val) {
+        const sign = (val >> 7) & 1;
+        const exponent = (val >> 3) & 0xF;
+        const mantissa = val & 0x7;
+
+        let result = 0;
+        if (exponent === 0) {
+            result = (sign ? -1 : 1) * Math.pow(2, -6) * (mantissa / 8);
+        } else if (exponent === 0xF && mantissa === 0x7) {
+            return "NaN";
+        } else {
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 7) * (1 + mantissa / 8);
+        }
+        return result.toFixed(3);
+    }
+
+    function formatFP4(val) {
+        const sign = (val >> 3) & 1;
+        const exponent = (val >> 1) & 0x3;
+        const mantissa = val & 1;
+
+        let result = 0;
+        if (exponent === 0) {
+            result = (sign ? -1 : 1) * Math.pow(2, 0) * (mantissa / 2);
+        } else {
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 1) * (1 + mantissa / 2);
+        }
+        return result.toFixed(2);
+    }
+
     function generatePlantUML() {
         if (historyData.length === 0) return "";
 
+        const channels = ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const config = {};
+        channels.forEach(ch => {
+            let type = document.getElementById(`type-${ch}`).value;
+            const toggle = document.getElementById(`toggle-${ch}`);
+            if (toggle && !toggle.checked) {
+                type = 'hidden';
+            }
+            config[ch] = type;
+        });
+
         let puml = "@startuml\n";
-        puml += "concise \"ui_in\" as ui_in\n";
-        puml += "concise \"uio_in\" as uio_in\n";
-        puml += "binary \"clk\" as clk\n";
-        puml += "binary \"rst_n\" as rst_n\n";
-        puml += "binary \"ena\" as ena\n";
-        puml += "concise \"uo_out\" as uo_out\n";
-        puml += "concise \"uio_out\" as uio_out\n";
-        puml += "concise \"uio_oe\" as uio_oe\n\n";
+
+        // Definitions
+        channels.forEach(ch => {
+            const type = config[ch];
+            if (type === 'hidden') return;
+
+            if (type === 'bits') {
+                for (let i = 7; i >= 0; i--) {
+                    puml += `binary "${ch}[${i}]" as ${ch}_${i}\n`;
+                }
+            } else if (type === 'binary') {
+                puml += `binary "${ch}" as ${ch}\n`;
+            } else {
+                puml += `concise "${ch}" as ${ch}\n`;
+            }
+        });
+        puml += "\n";
 
         let time = 0;
+        const lastState = {};
         historyData.forEach((t) => {
             puml += `@${time}\n`;
-            puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `clk is ${t.clk}\n`;
-            puml += `rst_n is ${t.rst_n}\n`;
-            puml += `ena is ${t.ena}\n`;
-            puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            channels.forEach(ch => {
+                const type = config[ch];
+                if (type === 'hidden') return;
+
+                const val = t[ch];
+                if (type === 'bits') {
+                    if (lastState[ch] === undefined) lastState[ch] = [];
+                    for (let i = 7; i >= 0; i--) {
+                        const bit = (val >> i) & 1;
+                        if (lastState[ch][i] !== bit) {
+                            puml += `${ch}_${i} is ${bit}\n`;
+                            lastState[ch][i] = bit;
+                        }
+                    }
+                } else {
+                    if (lastState[ch] !== val) {
+                        if (type === 'binary') {
+                            puml += `${ch} is ${val}\n`;
+                        } else if (type === 'hex') {
+                            puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                        } else if (type === 'dec') {
+                            puml += `${ch} is "${val}"\n`;
+                        } else if (type === 'bin') {
+                            puml += `${ch} is "0b${val.toString(2).padStart(8, '0')}"\n`;
+                        } else if (type === 'fp8') {
+                            puml += `${ch} is "${formatFP8(val)}"\n`;
+                        } else if (type === 'dual_fp4') {
+                            const high = formatFP4((val >> 4) & 0xF);
+                            const low = formatFP4(val & 0xF);
+                            puml += `${ch} is "${high} | ${low}"\n`;
+                        }
+                        lastState[ch] = val;
+                    }
+                }
+            });
             time++;
         });
 
@@ -253,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+    async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
         const timestamp = new Date().toLocaleTimeString();
         const inputs = {
             ui_in: uiValue,
@@ -312,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             addHistoryRow(inputs, outputs, timestamp);
-            updateDiagram();
+            if (!skipUpdate) updateDiagram();
         } else {
             logToConsole("Invalid response: " + responseLine, 'error');
         }
@@ -320,8 +435,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function connect() {
         if (!("serial" in navigator)) {
-            // For testing in environments without WebSerial (like this sandbox)
-            // or if we want to simulate connection
             if (window.confirm("WebSerial not supported in this browser. Use simulated connection?")) {
                 isConnected = true;
                 updateConnectionUI();
@@ -348,9 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateConnectionUI();
             logToConsole("Connected to " + (port.getInfo().usbVendorId || "device"));
 
-            // Optional: send reset to sync
             await writer.write("reset\n");
-            await reader.read(); // Consume 'ok'
+            await reader.read();
 
         } catch (e) {
             logToConsole("Connection failed: " + e.message, 'error');
@@ -453,7 +565,244 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
+    async function importFromCsv(file) {
+        try {
+            const text = await file.text();
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            if (lines.length < 2) return;
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const colMap = {};
+            ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena'].forEach(col => {
+                colMap[col] = headers.indexOf(col);
+            });
+
+            logToConsole(`Importing ${lines.length - 1} transactions from CSV...`);
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+
+                const parseVal = (val) => {
+                    if (val.startsWith('0x')) return parseInt(val.substring(2), 16);
+                    return parseInt(val, 10);
+                };
+
+                const uiInVal = colMap.ui_in !== -1 ? parseVal(values[colMap.ui_in]) : 0;
+                const uioInVal = colMap.uio_in !== -1 ? parseVal(values[colMap.uio_in]) : 0;
+                const clkVal = colMap.clk !== -1 ? parseVal(values[colMap.clk]) : 0;
+                const rstVal = colMap.rst_n !== -1 ? parseVal(values[colMap.rst_n]) : 1;
+                const enaVal = colMap.ena !== -1 ? parseVal(values[colMap.ena]) : 1;
+
+                await performTransaction(uiInVal, uioInVal, clkVal, rstVal, enaVal, true);
+
+                if (i % 10 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            updateDiagram();
+            logToConsole('CSV import complete');
+        } catch (e) {
+            console.error('Failed to import CSV', e);
+            logToConsole('Error importing CSV');
+        }
+    }
+
     exportCsvBtn.addEventListener('click', exportToCsv);
+
+    importCsvBtn.addEventListener('click', () => {
+        importCsvFile.click();
+    });
+
+    importCsvFile.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            importFromCsv(e.target.files[0]);
+            e.target.value = '';
+        }
+    });
+
+    document.querySelectorAll('.diagram-type').forEach(select => {
+        select.addEventListener('change', updateDiagram);
+    });
+
+    function applyDiagramScaling(mode) {
+        if (mode === 'details') {
+            diagramImg.classList.remove('fit-width');
+            diagramImg.classList.add('more-details');
+        } else {
+            diagramImg.classList.remove('more-details');
+            diagramImg.classList.add('fit-width');
+        }
+        localStorage.setItem('diagramScaling', mode);
+    }
+
+    diagramScaling.addEventListener('change', (e) => {
+        applyDiagramScaling(e.target.value);
+    });
+
+    const savedScaling = localStorage.getItem('diagramScaling') || 'fit';
+    diagramScaling.value = savedScaling;
+    applyDiagramScaling(savedScaling);
+
+    clearDataBtn.addEventListener('click', () => {
+        historyData.length = 0;
+        historyBody.innerHTML = '';
+        consoleDiv.textContent = '';
+        logToConsole('History and console cleared');
+        updateDiagram();
+    });
+
+    copyPermalinkBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            logToConsole('Permalink copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy permalink', err);
+            logToConsole('Failed to copy permalink');
+        });
+    });
+
+    async function fetchTestsets() {
+        try {
+            const response = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const files = await response.json();
+
+            const yamlFiles = files.filter(file => file.name.endsWith('.yaml'));
+
+            testsetSelect.innerHTML = '<option value="">Select a testset...</option>';
+            yamlFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file.download_url;
+                option.textContent = file.name;
+                testsetSelect.appendChild(option);
+            });
+            logToConsole(`Fetched ${yamlFiles.length} testsets from GitHub`);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectName = urlParams.get('project');
+            if (projectName) {
+                logToConsole(`Permalink detected for project: ${projectName}`);
+                const options = Array.from(testsetSelect.options);
+                const targetOption = options.find(opt => opt.textContent === `${projectName}.yaml`);
+                if (targetOption) {
+                    testsetSelect.value = targetOption.value;
+                    loadTestsetBtn.click();
+                } else {
+                    logToConsole(`Project ${projectName} not found in testsets`);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch testsets', e);
+            logToConsole('Failed to fetch testsets from GitHub');
+            testsetSelect.innerHTML = '<option value="">Error loading testsets</option>';
+        }
+    }
+
+    fetchTestsets();
+
+    runTestsetBtn.addEventListener('click', async () => {
+        if (!currentTestset || !currentTestset.test_steps) return;
+
+        logToConsole(`Running testset: ${currentTestset.project || 'Unnamed'}`);
+        runTestsetBtn.disabled = true;
+
+        let uiVal = getBits(uiIn);
+        let uioVal = getBits(uioIn);
+        let rstVal = rstN.checked ? 1 : 0;
+        let enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+
+        for (const step of currentTestset.test_steps) {
+            logToConsole(`Executing step: ${step.name || 'unnamed'}`);
+
+            if (step.values) {
+                if (step.values.ui_in !== undefined) uiVal = step.values.ui_in & 0xFF;
+                if (step.values.uio_in !== undefined) uioVal = step.values.uio_in & 0xFF;
+                if (step.values.rst_n !== undefined) rstVal = step.values.rst_n ? 1 : 0;
+                if (step.values.ena !== undefined) enaVal = step.values.ena ? 1 : 0;
+            }
+
+            const numCycles = step.cycles || 1;
+            for (let i = 0; i < numCycles; i++) {
+                if (clkSelection === '1/0') {
+                    await performTransaction(uiVal, uioVal, 1, rstVal, enaVal, true);
+                    await performTransaction(uiVal, uioVal, 0, rstVal, enaVal, true);
+                } else {
+                    const cVal = parseInt(clkSelection);
+                    await performTransaction(uiVal, uioVal, cVal, rstVal, enaVal, true);
+                }
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+        updateDiagram();
+        logToConsole('Testset execution complete');
+        runTestsetBtn.disabled = false;
+    });
+
+    loadTestsetBtn.addEventListener('click', async () => {
+        const url = testsetSelect.value;
+        if (!url) {
+            alert('Please select a testset first');
+            return;
+        }
+
+        try {
+            logToConsole(`Loading testset from ${url}...`);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const yamlText = await response.text();
+
+            currentTestset = jsyaml.load(yamlText);
+            const projectName = currentTestset.project || 'Unknown Project';
+            logToConsole(`Loaded testset: ${projectName}`);
+
+            const selectedOption = testsetSelect.options[testsetSelect.selectedIndex];
+            if (selectedOption && selectedOption.textContent.endsWith('.yaml')) {
+                const fileName = selectedOption.textContent.replace('.yaml', '');
+                updateURLParameter(fileName);
+            } else {
+                updateURLParameter(projectName);
+            }
+
+            testsetInfo.innerHTML = '';
+
+            const projectDiv = document.createElement('div');
+            const projectLabel = document.createElement('strong');
+            projectLabel.textContent = 'Project: ';
+            projectDiv.appendChild(projectLabel);
+            projectDiv.appendChild(document.createTextNode(currentTestset.project || 'N/A'));
+            testsetInfo.appendChild(projectDiv);
+
+            if (currentTestset.metadata && currentTestset.metadata.source) {
+                const sourceDiv = document.createElement('div');
+                const sourceLabel = document.createElement('strong');
+                sourceLabel.textContent = 'Source: ';
+                sourceDiv.appendChild(sourceLabel);
+                const sourceLink = document.createElement('a');
+                sourceLink.href = currentTestset.metadata.source;
+                sourceLink.target = '_blank';
+                sourceLink.textContent = currentTestset.metadata.source;
+                sourceDiv.appendChild(sourceLink);
+                testsetInfo.appendChild(sourceDiv);
+            }
+
+            if (currentTestset.test_steps) {
+                const stepsDiv = document.createElement('div');
+                const stepsLabel = document.createElement('strong');
+                stepsLabel.textContent = 'Steps: ';
+                stepsDiv.appendChild(stepsLabel);
+                stepsDiv.appendChild(document.createTextNode(currentTestset.test_steps.length));
+                testsetInfo.appendChild(stepsDiv);
+            }
+
+            runTestsetBtn.disabled = false;
+        } catch (e) {
+            console.error('Failed to load testset', e);
+            logToConsole('Failed to load testset');
+            testsetInfo.textContent = 'Error loading testset.';
+            runTestsetBtn.disabled = true;
+        }
+    });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
 });

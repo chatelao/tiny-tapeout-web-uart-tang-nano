@@ -1,7 +1,7 @@
 # Tiny Tapeout Web Serial for Tang Nano 4K
 
 ## Goal
-Create a Webinterface based on WebSerial for Tiny Tapeout designs running to a Tang Nano 4K.
+Create a [Webinterface](https://chatelao.github.io/tiny-tapeout-web-uart-tang-nano/) based on WebSerial for Tiny Tapeout designs running to a Tang Nano 4K.
 
 ## Default Architecture
 - **WebSerial**: The Browser communicates to the board over "WebSerial".
@@ -14,7 +14,14 @@ The diagram below shows the high-level integration of the Tiny Tapeout Web Seria
 
 ## Supported Tiny Tapeout Web Serial Features
 
-<tbd later>
+For detailed information on the Web Serial API features utilized in this project, please refer to the **[Web Serial API Documentation](SERIAL_PORT_ACCESS.md)**.
+
+### Key Capabilities:
+- **Port Detection & Filtering**: Target specific hardware via USB `vendorId` and `productId`.
+- **Interface Configuration**: Support for custom baud rates, data bits, stop bits, and parity.
+- **Asynchronous I/O**: High-performance streaming with native backpressure management.
+- **Hardware Flow Control**: Direct manipulation and monitoring of physical control lines (DTR, RTS, etc.).
+- **Hot-Plugging**: Real-time detection of device connection and disconnection.
 
 ## Memory Layout
 
@@ -46,7 +53,7 @@ The diagram below shows the high-level integration of the Tiny Tapeout Web Seria
 | `HOWTO_TINY_TAPEOUT.md` | Guide to loading and testing Tiny Tapeout modules | Planned |
 | `README.md` | Overview of the product | Present |
 | `ROADMAP.md` | Progress tracking and future steps | Planned |
-| `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Planned |
+| `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Present |
 | `TOOLCHAIN_SETUP.md` | Instructions for setting up the toolchains | Planned |
 
 ## UART Configuration

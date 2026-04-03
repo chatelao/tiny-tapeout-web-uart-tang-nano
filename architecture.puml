@@ -22,13 +22,15 @@ Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
         Rel(m3, apb_slots, "APB2 Expansion")
     }
 
-    Component(int_flash, "Internal Flash (32KB)", "0x00000000", "Bootloader & Vectors")
+    Component(int_flash, "Internal Flash (32KB)", "0x00000000", "Bootloader & Vectors (bin)")
     Component(int_sram, "Internal SRAM (22KB)", "0x20000000", "Stack & Fast Heap")
     Component(uart0, "UART0 (0x40004000)", "115200 8N1", "Serial Console")
+    Component(cfg_flash, "FPGA Cfg. Flash", "~200KB", "Bitstream (fst)")
 
     Rel(m3, int_flash, "I-Code/D-Code")
     Rel(m3, int_sram, "System Bus")
     Rel(m3, uart0, "APB")
+    Rel(cfg_flash, fabric, "Configures")
 }
 
 Rel(user, browser, "Interacts with")

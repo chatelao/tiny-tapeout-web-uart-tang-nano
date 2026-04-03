@@ -14,6 +14,38 @@ body {
     max-width: 1400px;
 }
 
+.nav-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    gap: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #65676b;
+    padding: 10px 20px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    background-color: #e7f3ff;
+    color: #007bff;
+}
+
+.nav-link.active {
+    color: #007bff;
+    background-color: #fff;
+    border-color: #ddd;
+    margin-bottom: -1px;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+}
+
 h1 {
     text-align: center;
     color: #050505;
@@ -44,6 +76,25 @@ h1 {
     background-color: #f8f9fa;
     font-weight: bold;
     font-size: 0.85rem;
+}
+
+/* Column hiding styles */
+.tester-table.hide-uio_in .col-uio_in > *:not(input[type="checkbox"]),
+.tester-table.hide-uio_out .col-uio_out > *:not(input[type="checkbox"]),
+.tester-table.hide-uio_oe .col-uio_oe > *:not(input[type="checkbox"]) {
+    display: none;
+}
+
+.tester-table.hide-uio_in td.col-uio_in,
+.tester-table.hide-uio_out td.col-uio_out,
+.tester-table.hide-uio_oe td.col-uio_oe {
+    background-color: #f0f0f0;
+}
+
+.tester-table input[type="checkbox"][id^="toggle-"] {
+    margin-right: 4px;
+    vertical-align: middle;
+    cursor: pointer;
 }
 
 .input-row {
@@ -172,13 +223,87 @@ button:hover {
     background-color: #0056b3;
 }
 
-#exportCsv {
-    background-color: #6c757d;
-    margin-left: 5px;
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 12px;
 }
 
-#exportCsv:hover {
+#exportCsv, #importCsv {
+    background-color: #6c757d;
+}
+
+#exportCsv:hover, #importCsv:hover {
     background-color: #5a6268;
+}
+
+#clearData {
+    background-color: #dc3545;
+}
+
+#clearData:hover {
+    background-color: #a71d2a;
+}
+
+.testset-panel h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.testset-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+#testsetSelect {
+    flex-grow: 1;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+#loadTestset {
+    background-color: #28a745;
+}
+
+#loadTestset:hover {
+    background-color: #218838;
+}
+
+#runTestset {
+    background-color: #fd7e14;
+}
+
+#runTestset:hover {
+    background-color: #e46a06;
+}
+
+#runTestset:disabled {
+    background-color: #ffc291;
+    cursor: not-allowed;
+}
+
+#copyPermalink {
+    background-color: #6c757d;
+}
+
+#copyPermalink:hover {
+    background-color: #5a6268;
+}
+
+.testset-info {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    border: 1px solid #eee;
 }
 
 .connection-status {
@@ -237,6 +362,26 @@ button:hover {
     font-size: 0.8rem;
 }
 
+.flasher-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.flasher-controls input[type="file"] {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
 #history tr:nth-child(even) {
     background-color: #fafafa;
 }
@@ -250,6 +395,40 @@ button:hover {
     font-size: 1.1rem;
     border-bottom: 1px solid #ddd;
     padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.diagram-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    justify-content: center;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.control-group label {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #65676b;
+    text-transform: uppercase;
+}
+
+.control-group select {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 0.85rem;
 }
 
 #diagram-container {
@@ -262,7 +441,13 @@ button:hover {
     justify-content: center;
 }
 
-#diagram-img {
+#diagram-img.fit-width {
+    width: 100%;
+    height: auto;
+    max-height: none;
+}
+
+#diagram-img.more-details {
     max-height: 500px;
     max-width: none; /* Allow horizontal expansion */
 }
