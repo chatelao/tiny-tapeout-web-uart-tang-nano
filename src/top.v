@@ -49,24 +49,25 @@ module top (
     wire [15:0] m3_gpio_o;
     assign led_pin = m3_gpio_o[0];
 
-    // --- M3 IP Core Instantiation ---
-    Gowin_EMPU_M3 m3_inst (
-        .SYS_CLK     (clk_27m),
-        .UART0RXD    (uart_rx),
-        .UART0TXD    (uart_tx),
-        .RESETN      (sys_reset_n),
+    // --- M3 IP Core Instantiation (using EMCU primitive for open-source tools) ---
+    EMCU m3_inst (
+        .FCLK               (clk_27m),
+        .UART0RXDI          (uart_rx),
+        .UART0TXDO          (uart_tx),
+        .PORESETN           (sys_reset_n),
+        .SYSRESETN          (sys_reset_n),
 
-        // APB2 Expansion
-        .PSEL        (apb_psel),
-        .PENABLE     (apb_penable),
-        .PADDR       (apb_paddr),
-        .PWRITE      (apb_pwrite),
-        .PWDATA      (apb_pwdata),
-        .PRDATA      (apb_prdata),
-        .PREADY      (apb_pready),
+        // APB2 Expansion (TargExp2)
+        .APBTARGEXP2PSEL    (apb_psel),
+        .APBTARGEXP2PENABLE (apb_penable),
+        .APBTARGEXP2PADDR   (apb_paddr),
+        .APBTARGEXP2PWRITE  (apb_pwrite),
+        .APBTARGEXP2PWDATA  (apb_pwdata),
+        .APBTARGEXP2PRDATA  (apb_prdata),
+        .APBTARGEXP2PREADY  (apb_pready),
 
         // GPIO
-        .GPIOO       (m3_gpio_o)
+        .IOEXPOUTPUTO       (m3_gpio_o)
     );
 
     // --- Tiny Tapeout Wrapper (APB2 Slot 1) ---
@@ -89,24 +90,25 @@ module top (
 
 endmodule
 
-// Blackbox definition for Gowin_EMPU_M3 to satisfy open-source tools
-module Gowin_EMPU_M3 (
-    input  wire        SYS_CLK,
-    input  wire        UART0RXD,
-    output wire        UART0TXD,
-    input  wire        RESETN,
+// Blackbox definition for EMCU to satisfy open-source tools
+module EMCU (
+    input  wire        FCLK,
+    input  wire        UART0RXDI,
+    output wire        UART0TXDO,
+    input  wire        PORESETN,
+    input  wire        SYSRESETN,
 
     // APB2 Expansion
-    output wire        PSEL,
-    output wire        PENABLE,
-    output wire [11:0] PADDR,
-    output wire        PWRITE,
-    output wire [31:0] PWDATA,
-    input  wire [31:0] PRDATA,
-    input  wire        PREADY,
+    output wire        APBTARGEXP2PSEL,
+    output wire        APBTARGEXP2PENABLE,
+    output wire [11:0] APBTARGEXP2PADDR,
+    output wire        APBTARGEXP2PWRITE,
+    output wire [31:0] APBTARGEXP2PWDATA,
+    input  wire [31:0] APBTARGEXP2PRDATA,
+    input  wire        APBTARGEXP2PREADY,
 
     // GPIO
-    output wire [15:0] GPIOO
+    output wire [15:0] IOEXPOUTPUTO
 );
     /* elective blackbox */
 endmodule
