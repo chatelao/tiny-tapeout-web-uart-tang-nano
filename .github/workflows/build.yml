@@ -35,4 +35,3 @@ jobs:
           name: build-artifacts
           path: |
             src/src/firmware.bin
-            src/src/bitstream.fs
