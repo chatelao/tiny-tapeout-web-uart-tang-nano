@@ -61,6 +61,29 @@ h1 {
     justify-content: center;
 }
 
+.bits-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.hex-input {
+    width: 35px;
+    font-family: monospace;
+    text-align: center;
+    padding: 2px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.hex-display {
+    margin-left: 8px;
+    font-family: monospace;
+    color: #65676b;
+    font-size: 0.85rem;
+}
+
 .bits input[type="checkbox"] {
     margin: 0;
     width: 16px;
