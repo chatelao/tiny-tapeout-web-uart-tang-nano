@@ -139,6 +139,29 @@ button:hover {
     background-color: #0056b3;
 }
 
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.action-cell {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    min-width: 180px;
+}
+
 .tbd {
     text-align: center;
     margin-top: 15px;

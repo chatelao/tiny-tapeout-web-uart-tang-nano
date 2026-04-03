@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
 
@@ -156,6 +158,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const clkVal = parseInt(clkSelection);
             performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        const uiValue = getBits(uiIn);
+        const uioInValue = getBits(uioIn);
+        const enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+        const clkVal = (clkSelection === '1/0') ? 0 : parseInt(clkSelection);
+
+        logToConsole('Reset sequence started...');
+        performTransaction(uiValue, uioInValue, clkVal, 0, enaVal);
+        performTransaction(uiValue, uioInValue, clkVal, 1, enaVal);
+        rstN.checked = true;
+        logToConsole('Reset sequence completed');
+    });
+
+    clearBtn.addEventListener('click', () => {
+        historyBody.innerHTML = '';
+        consoleDiv.textContent = '';
+        logToConsole('History and console cleared');
     });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
