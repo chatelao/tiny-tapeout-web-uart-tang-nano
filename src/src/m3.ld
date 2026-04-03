@@ -26,13 +26,15 @@ SECTIONS
         . = ALIGN(4);
         *(.text*)
         *(.rodata*)
-        _etext = .;
+        . = ALIGN(4);
     } > INT_FLASH
 
     /* Secure Gateway stubs */
     .gnu.sgstubs : ALIGN(1024)
     {
         *(.gnu.sgstubs*)
+        . = ALIGN(4);
+        _etext = .;
     } > INT_FLASH
 
     .data : AT (_etext)
@@ -52,6 +54,8 @@ SECTIONS
         *(COMMON)
         . = ALIGN(4);
         _ebss = .;
+        __end__ = .;
+        end = .;
     } > SRAM
 
     /* Extended PSRAM section */
