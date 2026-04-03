@@ -467,8 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
-        // Emulate behavior: Summing ui_in and uio_in
-        const result = (uiValue + uioInValue) & 0xFF;
+        // Emulate behavior: uo_out = ui_in ^ uio_in (XOR)
+        const result = (uiValue ^ uioInValue) & 0xFF;
         return {
             uo_out: result,
             uio_out: 0,
@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ena: enaVal
         };
 
-        logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0')}, uio_in=0x${uioInValue.toString(16).padStart(2, '0')}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
+        logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0').toUpperCase()}, uio_in=0x${uioInValue.toString(16).padStart(2, '0').toUpperCase()}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
 
         let outputs;
 
@@ -525,14 +525,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     uio_out: parts[3] ? parseInt(parts[3], 16) : 0,
                     uio_oe: parts[5] ? parseInt(parts[5], 16) : 0
                 };
-                logToConsole(`Received (Serial): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0')}`);
+                logToConsole(`Received (Serial): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
             } else {
                 logToConsole('Error: Serial transaction timed out');
                 outputs = { uo_out: 0, uio_out: 0, uio_oe: 0 };
             }
         } else {
             outputs = mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal);
-            logToConsole(`Received (Emulated): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0')}`);
+            logToConsole(`Received (Emulated): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
         }
 
         historyData.push({

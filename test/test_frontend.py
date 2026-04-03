@@ -113,10 +113,17 @@ def run_test():
             expect(page.locator("#connectBtn")).to_have_text("Connect")
             expect(page.locator("#statusLabel")).to_have_text("Simulation Mode")
 
-            # 5. Perform a Send in Simulation mode
-            print("Clicking Send in simulation mode...")
+            # 5. Perform a Send in Simulation mode (XOR test)
+            print("Clicking Send in simulation mode (XOR test)...")
+            # Set ui_in to 0x01 and uio_in to 0x01
+            page.fill("#ui_in_hex", "01")
+            page.press("#ui_in_hex", "Enter")
+            page.fill("#uio_in_hex", "01")
+            page.press("#uio_in_hex", "Enter")
+
             page.click("#sendReceive")
-            expect(page.locator("#console")).to_contain_text("Received (Emulated): uo_out=0x10", timeout=5000)
+            # 0x01 ^ 0x01 = 0x00
+            expect(page.locator("#console")).to_contain_text("Received (Emulated): uo_out=0x00", timeout=5000)
 
             print("WebSerial functionality test passed!")
             browser.close()
