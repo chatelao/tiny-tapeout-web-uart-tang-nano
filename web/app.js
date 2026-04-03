@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadTestsetBtn = document.getElementById('loadTestset');
     const runTestsetBtn = document.getElementById('runTestset');
     const copyPermalinkBtn = document.getElementById('copyPermalink');
+    const diagramScaling = document.getElementById('diagram-scaling');
+    const diagramImg = document.getElementById('diagram-img');
     const testsetInfo = document.getElementById('testsetInfo');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
@@ -445,6 +447,26 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.diagram-type').forEach(select => {
         select.addEventListener('change', updateDiagram);
     });
+
+    function applyDiagramScaling(mode) {
+        if (mode === 'details') {
+            diagramImg.classList.remove('fit-width');
+            diagramImg.classList.add('more-details');
+        } else {
+            diagramImg.classList.remove('more-details');
+            diagramImg.classList.add('fit-width');
+        }
+        localStorage.setItem('diagramScaling', mode);
+    }
+
+    diagramScaling.addEventListener('change', (e) => {
+        applyDiagramScaling(e.target.value);
+    });
+
+    // Initialize scaling from localStorage
+    const savedScaling = localStorage.getItem('diagramScaling') || 'fit';
+    diagramScaling.value = savedScaling;
+    applyDiagramScaling(savedScaling);
 
     clearDataBtn.addEventListener('click', () => {
         historyData.length = 0;
