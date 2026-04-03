@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiny Tapeout Web Tester</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Tiny Tapeout Web Tester</h1>
+
+        <div class="grid">
+            <div class="panel">
+                <h2>Inputs</h2>
+                <div class="signal-group">
+                    <label>ui_in [7:0]</label>
+                    <div class="bits" id="ui_in">
+                        <input type="checkbox" title="bit 7">
+                        <input type="checkbox" title="bit 6">
+                        <input type="checkbox" title="bit 5">
+                        <input type="checkbox" title="bit 4">
+                        <input type="checkbox" title="bit 3">
+                        <input type="checkbox" title="bit 2">
+                        <input type="checkbox" title="bit 1">
+                        <input type="checkbox" title="bit 0">
+                    </div>
+                </div>
+                <div class="signal-group">
+                    <label>uio_in [7:0]</label>
+                    <div class="bits" id="uio_in">
+                        <input type="checkbox" title="bit 7">
+                        <input type="checkbox" title="bit 6">
+                        <input type="checkbox" title="bit 5">
+                        <input type="checkbox" title="bit 4">
+                        <input type="checkbox" title="bit 3">
+                        <input type="checkbox" title="bit 2">
+                        <input type="checkbox" title="bit 1">
+                        <input type="checkbox" title="bit 0">
+                    </div>
+                </div>
+                <div class="signal-group-inline">
+                    <label><input type="checkbox" id="clk"> clk</label>
+                    <label><input type="checkbox" id="rst_n" checked> rst_n</label>
+                    <label><input type="checkbox" id="ena" checked> ena</label>
+                </div>
+
+                <button id="sendReceive">Send & Receive</button>
+                <div class="tbd">WebSerial TBD</div>
+            </div>
+
+            <div class="panel">
+                <h2>Outputs</h2>
+                <div class="signal-group">
+                    <label>uo_out [7:0]</label>
+                    <div class="bits-out" id="uo_out">
+                        <span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span>
+                    </div>
+                </div>
+                <div class="signal-group">
+                    <label>uio_out [7:0]</label>
+                    <div class="bits-out" id="uio_out">
+                        <span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span>
+                    </div>
+                </div>
+                <div class="signal-group">
+                    <label>uio_oe [7:0]</label>
+                    <div class="bits-out" id="uio_oe">
+                        <span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel console-panel">
+            <h2>Serial Console</h2>
+            <div id="console" class="console"></div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

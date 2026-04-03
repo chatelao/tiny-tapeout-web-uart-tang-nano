@@ -1,0 +1,124 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #1c1e21;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    max-width: 900px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    color: #050505;
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.panel {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.signal-group {
+    margin-bottom: 15px;
+}
+
+.signal-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-family: monospace;
+}
+
+.bits {
+    display: flex;
+    gap: 4px;
+}
+
+.bits-out {
+    display: flex;
+    gap: 4px;
+}
+
+.bit {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    background: #e4e6eb;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.bit.high {
+    background: #42b72a;
+    color: white;
+}
+
+.signal-group-inline {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    font-family: monospace;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.tbd {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #65676b;
+}
+
+.console-panel {
+    margin-top: 20px;
+}
+
+.console {
+    background: #1c1e21;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 15px;
+    border-radius: 6px;
+    height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
