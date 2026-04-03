@@ -1,0 +1,16 @@
+// Physical Constraints for Tiny Tapeout Web Serial on Tang Nano 4K
+
+// Clock
+IO_LOC "clk_27m" 45;
+
+// UART0
+IO_LOC "uart_tx" 18;
+IO_LOC "uart_rx" 19;
+
+// LED
+IO_LOC "led_pin" 10;
+
+// TT Debug Signals
+IO_LOC "debug_clk" 44;     // IOT17B (J2.9)
+IO_LOC "debug_rst_n" 43;   // IOT17A (J2.8)
+IO_LOC "debug_ena" 42;     // IOT20B (J2.7)
