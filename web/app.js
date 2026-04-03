@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const testsetSelect = document.getElementById('testsetSelect');
     const loadTestsetBtn = document.getElementById('loadTestset');
     const runTestsetBtn = document.getElementById('runTestset');
+    const copyPermalinkBtn = document.getElementById('copyPermalink');
     const testsetInfo = document.getElementById('testsetInfo');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
@@ -32,6 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const historyData = [];
     let currentTestset = null;
+
+    function updateURLParameter(projectName) {
+        const url = new URL(window.location.href);
+        if (projectName) {
+            url.searchParams.set('project', projectName);
+        } else {
+            url.searchParams.delete('project');
+        }
+        window.history.pushState({}, '', url);
+    }
 
     function logToConsole(message) {
         const timestamp = new Date().toLocaleTimeString();
@@ -426,6 +437,15 @@ document.addEventListener('DOMContentLoaded', () => {
         logToConsole('History and console cleared');
     });
 
+    copyPermalinkBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            logToConsole('Permalink copied to clipboard');
+        }).catch(err => {
+            console.error('Failed to copy permalink', err);
+            logToConsole('Failed to copy permalink');
+        });
+    });
+
     async function fetchTestsets() {
         try {
             const response = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
@@ -442,6 +462,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 testsetSelect.appendChild(option);
             });
             logToConsole(`Fetched ${yamlFiles.length} testsets from GitHub`);
+
+            // Handle permalink
+            const urlParams = new URLSearchParams(window.location.search);
+            const projectName = urlParams.get('project');
+            if (projectName) {
+                logToConsole(`Permalink detected for project: ${projectName}`);
+                const options = Array.from(testsetSelect.options);
+                const targetOption = options.find(opt => opt.textContent === `${projectName}.yaml`);
+                if (targetOption) {
+                    testsetSelect.value = targetOption.value;
+                    loadTestsetBtn.click();
+                } else {
+                    logToConsole(`Project ${projectName} not found in testsets`);
+                }
+            }
         } catch (e) {
             console.error('Failed to fetch testsets', e);
             logToConsole('Failed to fetch testsets from GitHub');
@@ -506,7 +541,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const yamlText = await response.text();
 
             currentTestset = jsyaml.load(yamlText);
-            logToConsole(`Loaded testset: ${currentTestset.project || 'Unknown Project'}`);
+            const projectName = currentTestset.project || 'Unknown Project';
+            logToConsole(`Loaded testset: ${projectName}`);
+
+            const selectedOption = testsetSelect.options[testsetSelect.selectedIndex];
+            if (selectedOption && selectedOption.textContent.endsWith('.yaml')) {
+                const fileName = selectedOption.textContent.replace('.yaml', '');
+                updateURLParameter(fileName);
+            } else {
+                updateURLParameter(projectName);
+            }
 
             testsetInfo.innerHTML = '';
 
