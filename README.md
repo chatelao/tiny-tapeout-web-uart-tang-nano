@@ -1,9 +1,18 @@
 # Tiny Tapeout Web Serial for Tang Nano 4K
 
 ## Goal
-This project aims to port Tiny Tapeout Web Serial to the "Sipeed Tang Nano 4K" FPGA development board.
+Create a Webinterface based on WebSerial for Tiny Tapeout designs running to a Tang Nano 4K.
 
 For a comprehensive overview of the port, including hardware details, installation, and usage, see the [Tang Nano 4K Tiny Tapeout Web Serial Port Guide](M3_MICROPYTHON.md).
+
+## Default Architecture
+- **WebSerial**: The Browser communicates to the board over "WebSerial".
+- **Static Webpage**: The web access is handled with a simple static webpage, hosted on GitHub Pages, but deployable anywhere else.
+
+## Architecture Diagram
+The diagram below shows the high-level integration of the Tiny Tapeout Web Serial interface with the Host PC and the Tang Nano 4K board.
+
+![Architecture Diagram](https://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/chatelao/tiny-tapeout-web-uart-tang-nano/main/architecture.puml)
 
 ## Supported Tiny Tapeout Web Serial Features
 
@@ -52,23 +61,25 @@ For a comprehensive overview of the port, including hardware details, installati
 
 ## Project Structure
 
-| Path | Description |
-| :--- | :--- |
-| `/definitions` | Datasheets and Standards to be used |
-| `/examples` | Example Tiny Tapeout Web Serial scripts and FPGA projects |
-| `/src` | Source files for the Tiny Tapeout Web Serial port |
-| `/test` | Unit, System, and End-2-End test concepts and cases |
-| `/.github` | Workflows for CI/CD |
-| `AUDIT.md` | Comprehensive project audit report |
-| `COMPLIANCE_TESTS.md` | Tiny Tapeout Web Serial compliance testing results |
-| `FPGA_BRIDGE_USAGE.md` | Guide on using Tiny Tapeout Web Serial to interact with the FPGA |
-| `GEMINI.md` | Project goal and structural guidelines |
-| `HOWTO_TINY_TAPEOUT.md` | Guide to loading and testing Tiny Tapeout modules |
-| `M3_FPGA_INTEGRATIONS.md` | Guide to communication interfaces between M3 and FPGA |
-| `M3_MICROPYTHON.md` | Supported Tiny Tapeout Web Serial features and port guide |
-| `ROADMAP.md` | Progress tracking and future steps |
-| `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port |
-| [`TOOLCHAIN_SETUP.md`](TOOLCHAIN_SETUP.md) | Instructions for setting up the toolchains |
+| Path | Description | Status |
+| :--- | :--- | :--- |
+| `/` | Root directory with relevant `.md` files | Present |
+| `/definitions` | Datasheets and Standards to be used | Planned |
+| `/examples` | Example data scripts | Planned |
+| `/examples/tt_projects` | Example Tiny-Tapeout FPGA projects | Planned |
+| `/test` | Unit, System and End-2-End test concepts and cases | Planned |
+| `/src` | Source files (only accepted if working and covered by tests) | Planned |
+| `/.github/workflows` | CI/CD for release tag publish the installer/binary | Planned |
+| `AUDIT.md` | Comprehensive project audit report | Planned |
+| `COMPLIANCE_TESTS.md` | Tiny Tapeout Web Serial compliance testing results | Planned |
+| `GEMINI.md` | Project goal and structural guidelines | Present |
+| `HOWTO_TINY_TAPEOUT.md` | Guide to loading and testing Tiny Tapeout modules | Planned |
+| `M3_FPGA_INTEGRATIONS.md` | Guide to communication interfaces between M3 and FPGA | Planned |
+| `M3_MICROPYTHON.md` | Supported Tiny Tapeout Web Serial features and port guide | Planned |
+| `README.md` | Overview of the product | Present |
+| `ROADMAP.md` | Progress tracking and future steps | Planned |
+| `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Planned |
+| `TOOLCHAIN_SETUP.md` | Instructions for setting up the toolchains | Planned |
 
 ## UART Configuration
 The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 peripheral.
