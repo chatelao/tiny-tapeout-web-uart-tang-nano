@@ -1,0 +1,30 @@
+[
+ {
+  "InstFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/top.v",
+  "InstLine" : 7,
+  "InstName" : "top",
+  "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/top.v",
+  "ModuleLine" : 7,
+  "ModuleName" : "top",
+  "SubInsts" : [
+   {
+    "InstFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/top.v",
+    "InstLine" : 74,
+    "InstName" : "tt_bridge",
+    "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/tt_wrapper.v",
+    "ModuleLine" : 15,
+    "ModuleName" : "tt_m3_wrapper",
+    "SubInsts" : [
+     {
+      "InstFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/tt_wrapper.v",
+      "InstLine" : 86,
+      "InstName" : "tt_inst",
+      "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/tt_project.v",
+      "ModuleLine" : 9,
+      "ModuleName" : "tt_um_minimal_echo"
+     }
+    ]
+   }
+  ]
+ }
+]

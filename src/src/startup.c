@@ -8,7 +8,7 @@ extern uint32_t _edata;
 extern uint32_t _sbss;
 extern uint32_t _ebss;
 
-int main(void);
+void main(void);
 
 void Reset_Handler(void) __attribute__((naked, section(".boot")));
 void Reset_Handler(void) {
@@ -35,8 +35,7 @@ void Default_Handler(void) {
 }
 
 // Minimal ISR Vector Table
-const uint32_t isr_vector[] __attribute__((section(".isr_vector"), aligned(256))
-) = {
+const uint32_t isr_vector[] __attribute__((section(".isr_vector"), aligned(256))) = {
     (uint32_t)&_estack,
     (uint32_t)&Reset_Handler,
     (uint32_t)&Default_Handler, // NMI

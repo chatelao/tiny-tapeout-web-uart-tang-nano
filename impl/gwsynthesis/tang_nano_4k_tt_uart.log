@@ -1,0 +1,11 @@
+GowinSynthesis start
+Running parser ...
+Analyzing Verilog file 'C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\top.v'
+Analyzing Verilog file 'C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\tt_project.v'
+Analyzing Verilog file 'C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\tt_wrapper.v'
+Analyzing Verilog file 'C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\gowin_empu\gowin_empu.v'
+ERROR (EX3094) : Net type must be explicitly specified for 'io_exp_output_o' when default_nettype is none("C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\gowin_empu\gowin_empu.v":697)
+ERROR (EX3675) : Non-net port 'io_exp_output_o' cannot be of mode input("C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\gowin_empu\gowin_empu.v":697)
+ERROR (EX3928) : Module 'GW_GPIO' is ignored due to previous errors("C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\gowin_empu\gowin_empu.v":697)
+Verilog file 'C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\gowin_empu\gowin_empu.v' ignored due to errors
+GowinSynthesis finish
