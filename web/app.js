@@ -10,13 +10,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
+    const connectBtn = document.getElementById('connectBtn');
+    const statusLabel = document.getElementById('statusLabel');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
     const historyData = [];
 
-    function logToConsole(message) {
+    let port = null;
+    let reader = null;
+    let writer = null;
+    let isConnected = false;
+
+    // --- TT_SERIAL Mock Board ---
+    const mockBoard = {
+        ui_in: 0,
+        uio_in: 0,
+        clk: 0,
+        rst_n: 1,
+        ena: 1,
+        processCommand: function(cmd) {
+            cmd = cmd.trim();
+            if (cmd === 'reset') return 'ok';
+
+            // Compact Format: [ui_in][uio_in][ctrl] (6 hex chars)
+            if (cmd.length === 6 && /^[0-9A-Fa-f]+$/.test(cmd)) {
+                this.ui_in = parseInt(cmd.substring(0, 2), 16);
+                this.uio_in = parseInt(cmd.substring(2, 4), 16);
+                const ctrl = parseInt(cmd.substring(4, 6), 16);
+                this.clk = ctrl & 1;
+                this.rst_n = (ctrl >> 1) & 1;
+                this.ena = (ctrl >> 2) & 1;
+
+                const uo_out = (this.ui_in + this.uio_in) & 0xFF;
+                const uio_out = 0x00;
+                const uio_oe = 0x00;
+                return uo_out.toString(16).padStart(2, '0').toUpperCase() +
+                       uio_out.toString(16).padStart(2, '0').toUpperCase() +
+                       uio_oe.toString(16).padStart(2, '0').toUpperCase();
+            }
+
+            // Short/Long formats would go here, but let's stick to Compact for the main logic
+            return 'error';
+        }
+    };
+
+    function logToConsole(message, type = 'info') {
         const timestamp = new Date().toLocaleTimeString();
-        consoleDiv.textContent += `[${timestamp}] ${message}\n`;
+        const prefix = type === 'error' ? 'ERROR: ' : (type === 'send' ? '-> ' : (type === 'recv' ? '<- ' : ''));
+        consoleDiv.textContent += `[${timestamp}] ${prefix}${message}\n`;
         consoleDiv.scrollTop = consoleDiv.scrollHeight;
     }
 
@@ -85,45 +126,37 @@ document.addEventListener('DOMContentLoaded', () => {
     function addHistoryRow(inputs, outputs, timestamp) {
         const row = document.createElement('tr');
 
-        // Time
         const timeTd = document.createElement('td');
         timeTd.className = 'time-cell';
         timeTd.textContent = timestamp;
         row.appendChild(timeTd);
 
-        // ui_in
         const uiInTd = document.createElement('td');
         uiInTd.appendChild(createBitDisplay(inputs.ui_in));
         row.appendChild(uiInTd);
 
-        // uio_in
         const uioInTd = document.createElement('td');
         uioInTd.appendChild(createBitDisplay(inputs.uio_in));
         row.appendChild(uioInTd);
 
-        // clk, rst_n, ena
         [inputs.clk, inputs.rst_n, inputs.ena].forEach(val => {
             const td = document.createElement('td');
             td.textContent = val;
             row.appendChild(td);
         });
 
-        // uo_out
         const uoOutTd = document.createElement('td');
         uoOutTd.appendChild(createBitDisplay(outputs.uo_out));
         row.appendChild(uoOutTd);
 
-        // uio_out
         const uioOutTd = document.createElement('td');
         uioOutTd.appendChild(createBitDisplay(outputs.uio_out));
         row.appendChild(uioOutTd);
 
-        // uio_oe
         const uioOeTd = document.createElement('td');
         uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
         row.appendChild(uioOeTd);
 
-        // Action placeholder
         const actionTd = document.createElement('td');
         actionTd.textContent = '-';
         row.appendChild(actionTd);
@@ -164,26 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function encodePlantUML(text) {
-        // UTF-8 to Uint8Array
         const encoder = new TextEncoder();
         const data = encoder.encode(text);
-
-        // Deflate
         const cs = new CompressionStream('deflate-raw');
         const writer = cs.writable.getWriter();
         writer.write(data);
         writer.close();
-
         const response = new Response(cs.readable);
         const compressed = new Uint8Array(await response.arrayBuffer());
-
-        // The PlantUML standard deflate requires skipping the first 2 bytes (zlib header)
-        // and last 4 bytes (checksum) if using raw deflate.
-        // However, CompressionStream 'deflate' provides zlib format.
-        // PlantUML server usually expects the deflate data WITHOUT the zlib header/checksum
-        // OR it uses a specific implementation.
-        // Let's try the common JS implementation approach:
-
         return encode64(compressed);
     }
 
@@ -232,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+    async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         const timestamp = new Date().toLocaleTimeString();
         const inputs = {
             ui_in: uiValue,
@@ -242,111 +263,141 @@ document.addEventListener('DOMContentLoaded', () => {
             ena: enaVal
         };
 
-        logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0')}, uio_in=0x${uioInValue.toString(16).padStart(2, '0')}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
+        const ctrl = clkVal | (rstVal << 1) | (enaVal << 2);
+        const cmd = uiValue.toString(16).padStart(2, '0') +
+                    uioInValue.toString(16).padStart(2, '0') +
+                    ctrl.toString(16).padStart(2, '0');
 
-        // Emulate behavior: Summing ui_in and uio_in
-        const result = (uiValue + uioInValue) & 0xFF;
+        let responseLine = "";
 
-        const outputs = {
-            uo_out: result,
-            uio_out: 0,
-            uio_oe: 0
-        };
+        if (isConnected && writer && reader) {
+            try {
+                logToConsole(cmd, 'send');
+                await writer.write(cmd + '\n');
 
-        historyData.push({
-            time: timestamp,
-            ...inputs,
-            ...outputs
-        });
+                // Read response
+                let { value, done } = await reader.read();
+                if (done) {
+                    throw new Error("Serial port closed");
+                }
+                responseLine = value.trim();
+                logToConsole(responseLine, 'recv');
+            } catch (e) {
+                logToConsole(e.message, 'error');
+                disconnect();
+                return;
+            }
+        } else {
+            // Simulation mode
+            logToConsole(cmd + " (Sim)", 'send');
+            responseLine = mockBoard.processCommand(cmd);
+            logToConsole(responseLine + " (Sim)", 'recv');
+        }
 
-        addHistoryRow(inputs, outputs, timestamp);
-        logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
-        updateDiagram();
+        if (responseLine.length === 6) {
+            const uo_out = parseInt(responseLine.substring(0, 2), 16);
+            const uio_out = parseInt(responseLine.substring(2, 4), 16);
+            const uio_oe = parseInt(responseLine.substring(4, 6), 16);
+
+            const outputs = {
+                uo_out: uo_out,
+                uio_out: uio_out,
+                uio_oe: uio_oe
+            };
+
+            historyData.push({
+                time: timestamp,
+                ...inputs,
+                ...outputs
+            });
+
+            addHistoryRow(inputs, outputs, timestamp);
+            updateDiagram();
+        } else {
+            logToConsole("Invalid response: " + responseLine, 'error');
+        }
     }
 
-    function exportToCsv() {
-        if (historyData.length === 0) {
-            alert('No history to export');
+    async function connect() {
+        if (!("serial" in navigator)) {
+            // For testing in environments without WebSerial (like this sandbox)
+            // or if we want to simulate connection
+            if (window.confirm("WebSerial not supported in this browser. Use simulated connection?")) {
+                isConnected = true;
+                updateConnectionUI();
+                logToConsole("Simulated connection established");
+                return;
+            }
+            alert("WebSerial is not supported in this browser.");
             return;
         }
 
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
-        const csvRows = [headers.join(',')];
+        try {
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 115200 });
 
-        for (const row of historyData) {
-            const values = [
-                `"${row.time}"`,
-                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
-                row.clk,
-                row.rst_n,
-                row.ena,
-                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
-            ];
-            csvRows.push(values.join(','));
+            const textEncoder = new TextEncoderStream();
+            const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+            writer = textEncoder.writable.getWriter();
+
+            const textDecoder = new TextDecoderStream();
+            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+            reader = textDecoder.readable.getReader();
+
+            isConnected = true;
+            updateConnectionUI();
+            logToConsole("Connected to " + (port.getInfo().usbVendorId || "device"));
+
+            // Optional: send reset to sync
+            await writer.write("reset\n");
+            await reader.read(); // Consume 'ok'
+
+        } catch (e) {
+            logToConsole("Connection failed: " + e.message, 'error');
+            isConnected = false;
+            updateConnectionUI();
         }
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'tiny_tapeout_history.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-
-        // Clean up
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
     }
 
-    function exportToCsv() {
-        if (historyData.length === 0) {
-            alert('No history to export');
-            return;
+    async function disconnect() {
+        isConnected = false;
+        if (reader) {
+            await reader.cancel();
+            reader = null;
         }
-
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
-        const csvRows = [headers.join(',')];
-
-        for (const row of historyData) {
-            const values = [
-                `"${row.time}"`,
-                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
-                row.clk,
-                row.rst_n,
-                row.ena,
-                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
-            ];
-            csvRows.push(values.join(','));
+        if (writer) {
+            await writer.close();
+            writer = null;
         }
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'tiny_tapeout_history.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-
-        // Clean up
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
+        if (port) {
+            await port.close();
+            port = null;
+        }
+        updateConnectionUI();
+        logToConsole("Disconnected");
     }
 
-    sendReceiveBtn.addEventListener('click', () => {
+    function updateConnectionUI() {
+        if (isConnected) {
+            connectBtn.textContent = "Simulation";
+            connectBtn.classList.add('connected');
+            statusLabel.textContent = "Mode: Real Hardware";
+        } else {
+            connectBtn.textContent = "Connect";
+            connectBtn.classList.remove('connected');
+            statusLabel.textContent = "Mode: Simulation";
+        }
+    }
+
+    connectBtn.addEventListener('click', () => {
+        if (isConnected) {
+            disconnect();
+        } else {
+            connect();
+        }
+    });
+
+    sendReceiveBtn.addEventListener('click', async () => {
         const uiValue = getBits(uiIn);
         const uioInValue = getBits(uioIn);
         const rstVal = rstN.checked ? 1 : 0;
@@ -354,16 +405,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const clkSelection = clk.value;
 
         if (clkSelection === '1/0') {
-            performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
-            performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
         } else {
             const clkVal = parseInt(clkSelection);
-            performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
     });
+
+    function exportToCsv() {
+        if (historyData.length === 0) {
+            alert('No history to export');
+            return;
+        }
+
+        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const csvRows = [headers.join(',')];
+
+        for (const row of historyData) {
+            const values = [
+                `"${row.time}"`,
+                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
+                row.clk,
+                row.rst_n,
+                row.ena,
+                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
+            ];
+            csvRows.push(values.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'tiny_tapeout_history.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
 
     exportCsvBtn.addEventListener('click', exportToCsv);
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
-    logToConsole('Note: WebSerial functionality is TBD');
 });

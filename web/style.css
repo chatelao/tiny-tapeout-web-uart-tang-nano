@@ -181,10 +181,34 @@ button:hover {
     background-color: #5a6268;
 }
 
-.tbd {
+.connection-status {
     text-align: center;
     margin-top: 15px;
-    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.connect-btn {
+    background-color: #28a745;
+}
+
+.connect-btn:hover {
+    background-color: #218838;
+}
+
+.connect-btn.connected {
+    background-color: #dc3545;
+}
+
+.connect-btn.connected:hover {
+    background-color: #c82333;
+}
+
+#statusLabel {
+    font-size: 0.9rem;
+    font-weight: bold;
     color: #65676b;
 }
 
