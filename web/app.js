@@ -87,13 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         historyBody.prepend(row);
     }
 
-    sendReceiveBtn.addEventListener('click', () => {
-        const uiValue = getBits(uiIn);
-        const uioInValue = getBits(uioIn);
-        const clkVal = clk.checked ? 1 : 0;
-        const rstVal = rstN.checked ? 1 : 0;
-        const enaVal = ena.checked ? 1 : 0;
-
+    function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         const inputs = {
             ui_in: uiValue,
             uio_in: uioInValue,
@@ -114,8 +108,23 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         addHistoryRow(inputs, outputs);
-
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
+    }
+
+    sendReceiveBtn.addEventListener('click', () => {
+        const uiValue = getBits(uiIn);
+        const uioInValue = getBits(uioIn);
+        const rstVal = rstN.checked ? 1 : 0;
+        const enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+
+        if (clkSelection === '1/0') {
+            performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
+            performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
+        } else {
+            const clkVal = parseInt(clkSelection);
+            performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
+        }
     });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');

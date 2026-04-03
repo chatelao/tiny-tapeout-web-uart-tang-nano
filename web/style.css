@@ -94,6 +94,12 @@ h1 {
     height: 18px;
 }
 
+.center-cell select {
+    padding: 2px;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
 button {
     background-color: #007bff;
     color: white;
