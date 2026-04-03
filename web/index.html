@@ -7,69 +7,50 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container-fluid">
         <h1>Tiny Tapeout Web Tester</h1>
 
-        <div class="grid">
-            <div class="panel">
-                <h2>Inputs</h2>
-                <div class="signal-group">
-                    <label>ui_in [7:0]</label>
-                    <div class="bits" id="ui_in">
-                        <input type="checkbox" title="bit 7">
-                        <input type="checkbox" title="bit 6">
-                        <input type="checkbox" title="bit 5">
-                        <input type="checkbox" title="bit 4">
-                        <input type="checkbox" title="bit 3">
-                        <input type="checkbox" title="bit 2">
-                        <input type="checkbox" title="bit 1">
-                        <input type="checkbox" title="bit 0">
-                    </div>
-                </div>
-                <div class="signal-group">
-                    <label>uio_in [7:0]</label>
-                    <div class="bits" id="uio_in">
-                        <input type="checkbox" title="bit 7">
-                        <input type="checkbox" title="bit 6">
-                        <input type="checkbox" title="bit 5">
-                        <input type="checkbox" title="bit 4">
-                        <input type="checkbox" title="bit 3">
-                        <input type="checkbox" title="bit 2">
-                        <input type="checkbox" title="bit 1">
-                        <input type="checkbox" title="bit 0">
-                    </div>
-                </div>
-                <div class="signal-group-inline">
-                    <label><input type="checkbox" id="clk"> clk</label>
-                    <label><input type="checkbox" id="rst_n" checked> rst_n</label>
-                    <label><input type="checkbox" id="ena" checked> ena</label>
-                </div>
-
-                <button id="sendReceive">Send & Receive</button>
-                <div class="tbd">WebSerial TBD</div>
-            </div>
-
-            <div class="panel">
-                <h2>Outputs</h2>
-                <div class="signal-group">
-                    <label>uo_out [7:0]</label>
-                    <div class="bits-out" id="uo_out">
-                        <span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span>
-                    </div>
-                </div>
-                <div class="signal-group">
-                    <label>uio_out [7:0]</label>
-                    <div class="bits-out" id="uio_out">
-                        <span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span>
-                    </div>
-                </div>
-                <div class="signal-group">
-                    <label>uio_oe [7:0]</label>
-                    <div class="bits-out" id="uio_oe">
-                        <span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span><span class="bit">0</span>
-                    </div>
-                </div>
-            </div>
+        <div class="panel main-panel">
+            <table class="tester-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>ui_in [7:0]</th>
+                        <th>uio_in [7:0]</th>
+                        <th>clk</th>
+                        <th>rst_n</th>
+                        <th>ena</th>
+                        <th>uo_out [7:0]</th>
+                        <th>uio_out [7:0]</th>
+                        <th>uio_oe [7:0]</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="input-section">
+                    <tr class="input-row">
+                        <td class="time-cell">-</td>
+                        <td>
+                            <div class="bits" id="ui_in">
+                                <input type="checkbox" title="7"><input type="checkbox" title="6"><input type="checkbox" title="5"><input type="checkbox" title="4"><input type="checkbox" title="3"><input type="checkbox" title="2"><input type="checkbox" title="1"><input type="checkbox" title="0">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="bits" id="uio_in">
+                                <input type="checkbox" title="7"><input type="checkbox" title="6"><input type="checkbox" title="5"><input type="checkbox" title="4"><input type="checkbox" title="3"><input type="checkbox" title="2"><input type="checkbox" title="1"><input type="checkbox" title="0">
+                            </div>
+                        </td>
+                        <td class="center-cell"><input type="checkbox" id="clk"></td>
+                        <td class="center-cell"><input type="checkbox" id="rst_n" checked></td>
+                        <td class="center-cell"><input type="checkbox" id="ena" checked></td>
+                        <td colspan="3" class="results-placeholder">Ready to send...</td>
+                        <td><button id="sendReceive">Send</button></td>
+                    </tr>
+                </tbody>
+                <tbody id="history">
+                    <!-- History rows will be prepended here -->
+                </tbody>
+            </table>
+            <div class="tbd">WebSerial TBD</div>
         </div>
 
         <div class="panel console-panel">
