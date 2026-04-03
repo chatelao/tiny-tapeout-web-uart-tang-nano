@@ -8,7 +8,7 @@ extern uint32_t _edata;
 extern uint32_t _sbss;
 extern uint32_t _ebss;
 
-void main(void);
+int main(void);
 
 void Reset_Handler(void) __attribute__((naked, section(".boot")));
 void Reset_Handler(void) {
