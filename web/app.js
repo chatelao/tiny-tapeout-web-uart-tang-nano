@@ -145,16 +145,38 @@ document.addEventListener('DOMContentLoaded', () => {
         puml += "concise \"uio_oe\" as uio_oe\n\n";
 
         let time = 0;
+        let lastState = null;
         historyData.forEach((t) => {
-            puml += `@${time}\n`;
-            puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `clk is ${t.clk}\n`;
-            puml += `rst_n is ${t.rst_n}\n`;
-            puml += `ena is ${t.ena}\n`;
-            puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            let entryPuml = "";
+            const ui_in = `0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}`;
+            const uio_in = `0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}`;
+            const uo_out = `0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}`;
+            const uio_out = `0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}`;
+            const uio_oe = `0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}`;
+
+            if (!lastState || ui_in !== lastState.ui_in) entryPuml += `ui_in is "${ui_in}"\n`;
+            if (!lastState || uio_in !== lastState.uio_in) entryPuml += `uio_in is "${uio_in}"\n`;
+            if (!lastState || t.clk !== lastState.clk) entryPuml += `clk is ${t.clk}\n`;
+            if (!lastState || t.rst_n !== lastState.rst_n) entryPuml += `rst_n is ${t.rst_n}\n`;
+            if (!lastState || t.ena !== lastState.ena) entryPuml += `ena is ${t.ena}\n`;
+            if (!lastState || uo_out !== lastState.uo_out) entryPuml += `uo_out is "${uo_out}"\n`;
+            if (!lastState || uio_out !== lastState.uio_out) entryPuml += `uio_out is "${uio_out}"\n`;
+            if (!lastState || uio_oe !== lastState.uio_oe) entryPuml += `uio_oe is "${uio_oe}"\n`;
+
+            if (entryPuml) {
+                puml += `@${time}\n${entryPuml}`;
+            }
+
+            lastState = {
+                ui_in,
+                uio_in,
+                clk: t.clk,
+                rst_n: t.rst_n,
+                ena: t.ena,
+                uo_out,
+                uio_out,
+                uio_oe
+            };
             time++;
         });
 
@@ -305,47 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
-    function exportToCsv() {
-        if (historyData.length === 0) {
-            alert('No history to export');
-            return;
-        }
-
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
-        const csvRows = [headers.join(',')];
-
-        for (const row of historyData) {
-            const values = [
-                `"${row.time}"`,
-                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
-                row.clk,
-                row.rst_n,
-                row.ena,
-                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
-            ];
-            csvRows.push(values.join(','));
-        }
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'tiny_tapeout_history.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-
-        // Clean up
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
-    }
-
     sendReceiveBtn.addEventListener('click', () => {
         const uiValue = getBits(uiIn);
         const uioInValue = getBits(uioIn);
@@ -366,4 +347,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
     logToConsole('Note: WebSerial functionality is TBD');
+
 });
