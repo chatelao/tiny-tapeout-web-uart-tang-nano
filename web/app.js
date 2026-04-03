@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const uiIn = document.getElementById('ui_in').querySelectorAll('input');
     const uioIn = document.getElementById('uio_in').querySelectorAll('input');
+    const uiInHex = document.getElementById('ui_in_hex');
+    const uioInHex = document.getElementById('uio_in_hex');
     const clk = document.getElementById('clk');
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
@@ -24,6 +26,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return val;
     }
 
+    function updateHexFromBits(inputs, hexInput) {
+        const val = getBits(inputs);
+        hexInput.value = val.toString(16).padStart(2, '0').toUpperCase();
+    }
+
+    function updateBitsFromHex(hexInput, inputs) {
+        let val = parseInt(hexInput.value, 16);
+        if (isNaN(val)) val = 0;
+        val &= 0xFF;
+        inputs.forEach((input, index) => {
+            input.checked = (val >> (7 - index)) & 1;
+        });
+    }
+
+    uiIn.forEach(input => {
+        input.addEventListener('change', () => updateHexFromBits(uiIn, uiInHex));
+    });
+
+    uioIn.forEach(input => {
+        input.addEventListener('change', () => updateHexFromBits(uioIn, uioInHex));
+    });
+
+    uiInHex.addEventListener('input', () => updateBitsFromHex(uiInHex, uiIn));
+    uioInHex.addEventListener('input', () => updateBitsFromHex(uioInHex, uioIn));
+
     function createBitDisplay(value) {
         const container = document.createElement('div');
         container.className = 'bits-out';
@@ -34,6 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = bitVal;
             container.appendChild(span);
         }
+        const hexSpan = document.createElement('span');
+        hexSpan.className = 'hex-display';
+        hexSpan.textContent = `0x${value.toString(16).padStart(2, '0').toUpperCase()}`;
+        container.appendChild(hexSpan);
         return container;
     }
 
