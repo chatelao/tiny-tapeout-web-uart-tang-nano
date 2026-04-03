@@ -4,10 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const clk = document.getElementById('clk');
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
-    const uoOut = document.getElementById('uo_out').querySelectorAll('.bit');
-    const uioOut = document.getElementById('uio_out').querySelectorAll('.bit');
-    const uioOe = document.getElementById('uio_oe').querySelectorAll('.bit');
     const sendReceiveBtn = document.getElementById('sendReceive');
+    const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
 
     function logToConsole(message) {
@@ -26,16 +24,67 @@ document.addEventListener('DOMContentLoaded', () => {
         return val;
     }
 
-    function setBits(elements, value) {
-        elements.forEach((el, index) => {
-            const bit = (value >> (7 - index)) & 1;
-            el.textContent = bit;
-            if (bit) {
-                el.classList.add('high');
-            } else {
-                el.classList.remove('high');
-            }
+    function createBitDisplay(value) {
+        const container = document.createElement('div');
+        container.className = 'bits-out';
+        for (let i = 0; i < 8; i++) {
+            const bitVal = (value >> (7 - i)) & 1;
+            const span = document.createElement('span');
+            span.className = 'bit' + (bitVal ? ' high' : '');
+            span.textContent = bitVal;
+            container.appendChild(span);
+        }
+        return container;
+    }
+
+    function addHistoryRow(inputs, outputs) {
+        const row = document.createElement('tr');
+        const timestamp = new Date().toLocaleTimeString();
+
+        // Time
+        const timeTd = document.createElement('td');
+        timeTd.className = 'time-cell';
+        timeTd.textContent = timestamp;
+        row.appendChild(timeTd);
+
+        // ui_in
+        const uiInTd = document.createElement('td');
+        uiInTd.appendChild(createBitDisplay(inputs.ui_in));
+        row.appendChild(uiInTd);
+
+        // uio_in
+        const uioInTd = document.createElement('td');
+        uioInTd.appendChild(createBitDisplay(inputs.uio_in));
+        row.appendChild(uioInTd);
+
+        // clk, rst_n, ena
+        [inputs.clk, inputs.rst_n, inputs.ena].forEach(val => {
+            const td = document.createElement('td');
+            td.textContent = val;
+            row.appendChild(td);
         });
+
+        // uo_out
+        const uoOutTd = document.createElement('td');
+        uoOutTd.appendChild(createBitDisplay(outputs.uo_out));
+        row.appendChild(uoOutTd);
+
+        // uio_out
+        const uioOutTd = document.createElement('td');
+        uioOutTd.appendChild(createBitDisplay(outputs.uio_out));
+        row.appendChild(uioOutTd);
+
+        // uio_oe
+        const uioOeTd = document.createElement('td');
+        uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
+        row.appendChild(uioOeTd);
+
+        // Action placeholder
+        const actionTd = document.createElement('td');
+        actionTd.textContent = '-';
+        row.appendChild(actionTd);
+
+        historyBody.prepend(row);
     }
 
     sendReceiveBtn.addEventListener('click', () => {
@@ -45,15 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const rstVal = rstN.checked ? 1 : 0;
         const enaVal = ena.checked ? 1 : 0;
 
+        const inputs = {
+            ui_in: uiValue,
+            uio_in: uioInValue,
+            clk: clkVal,
+            rst_n: rstVal,
+            ena: enaVal
+        };
+
         logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0')}, uio_in=0x${uioInValue.toString(16).padStart(2, '0')}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
 
-        // Emulate behavior: Summing ui_in and uio_in as seen in the template
+        // Emulate behavior: Summing ui_in and uio_in
         const result = (uiValue + uioInValue) & 0xFF;
 
-        // Update mock outputs
-        setBits(uoOut, result);
-        setBits(uioOut, 0);
-        setBits(uioOe, 0);
+        const outputs = {
+            uo_out: result,
+            uio_out: 0,
+            uio_oe: 0
+        };
+
+        addHistoryRow(inputs, outputs);
 
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
     });
