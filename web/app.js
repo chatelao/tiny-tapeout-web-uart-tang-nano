@@ -153,30 +153,100 @@ document.addEventListener('DOMContentLoaded', () => {
         historyBody.prepend(row);
     }
 
+    function formatFP8(val) {
+        // E4M3: 1 sign, 4 exponent, 3 mantissa, bias 7
+        const sign = (val >> 7) & 1;
+        const exponent = (val >> 3) & 0xF;
+        const mantissa = val & 0x7;
+
+        let result = 0;
+        if (exponent === 0) {
+            // Subnormal
+            result = (sign ? -1 : 1) * Math.pow(2, -6) * (mantissa / 8);
+        } else if (exponent === 0xF && mantissa === 0x7) {
+            // NaN (specific for E4M3 in some conventions)
+            return "NaN";
+        } else {
+            // Normal
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 7) * (1 + mantissa / 8);
+        }
+        return result.toFixed(3);
+    }
+
+    function formatFP4(val) {
+        // E2M1: 1 sign, 2 exponent, 1 mantissa, bias 1
+        const sign = (val >> 3) & 1;
+        const exponent = (val >> 1) & 0x3;
+        const mantissa = val & 1;
+
+        let result = 0;
+        if (exponent === 0) {
+            // Subnormal
+            result = (sign ? -1 : 1) * Math.pow(2, 0) * (mantissa / 2);
+        } else {
+            // Normal
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 1) * (1 + mantissa / 2);
+        }
+        return result.toFixed(2);
+    }
+
     function generatePlantUML() {
         if (historyData.length === 0) return "";
 
+        const channels = ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const config = {};
+        channels.forEach(ch => {
+            config[ch] = document.getElementById(`type-${ch}`).value;
+        });
+
         let puml = "@startuml\n";
-        puml += "concise \"ui_in\" as ui_in\n";
-        puml += "concise \"uio_in\" as uio_in\n";
-        puml += "binary \"clk\" as clk\n";
-        puml += "binary \"rst_n\" as rst_n\n";
-        puml += "binary \"ena\" as ena\n";
-        puml += "concise \"uo_out\" as uo_out\n";
-        puml += "concise \"uio_out\" as uio_out\n";
-        puml += "concise \"uio_oe\" as uio_oe\n\n";
+
+        // Definitions
+        channels.forEach(ch => {
+            const type = config[ch];
+            if (type === 'hidden') return;
+
+            if (type === 'bits') {
+                for (let i = 7; i >= 0; i--) {
+                    puml += `binary "${ch}[${i}]" as ${ch}_${i}\n`;
+                }
+            } else if (type === 'binary') {
+                puml += `binary "${ch}" as ${ch}\n`;
+            } else {
+                puml += `concise "${ch}" as ${ch}\n`;
+            }
+        });
+        puml += "\n";
 
         let time = 0;
         historyData.forEach((t) => {
             puml += `@${time}\n`;
-            puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `clk is ${t.clk}\n`;
-            puml += `rst_n is ${t.rst_n}\n`;
-            puml += `ena is ${t.ena}\n`;
-            puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            channels.forEach(ch => {
+                const type = config[ch];
+                if (type === 'hidden') return;
+
+                const val = t[ch];
+                if (type === 'bits') {
+                    for (let i = 7; i >= 0; i--) {
+                        const bit = (val >> i) & 1;
+                        puml += `${ch}_${i} is ${bit}\n`;
+                    }
+                } else if (type === 'binary') {
+                    puml += `${ch} is ${val}\n`;
+                } else if (type === 'hex') {
+                    puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                } else if (type === 'dec') {
+                    puml += `${ch} is "${val}"\n`;
+                } else if (type === 'bin') {
+                    puml += `${ch} is "0b${val.toString(2).padStart(8, '0')}"\n`;
+                } else if (type === 'fp8') {
+                    puml += `${ch} is "${formatFP8(val)}"\n`;
+                } else if (type === 'dual_fp4') {
+                    const high = formatFP4((val >> 4) & 0xF);
+                    const low = formatFP4(val & 0xF);
+                    puml += `${ch} is "${high} | ${low}"\n`;
+                }
+            });
             time++;
         });
 
@@ -327,47 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
-    function exportToCsv() {
-        if (historyData.length === 0) {
-            alert('No history to export');
-            return;
-        }
-
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
-        const csvRows = [headers.join(',')];
-
-        for (const row of historyData) {
-            const values = [
-                `"${row.time}"`,
-                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
-                row.clk,
-                row.rst_n,
-                row.ena,
-                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
-            ];
-            csvRows.push(values.join(','));
-        }
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'tiny_tapeout_history.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-
-        // Clean up
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
-    }
-
     sendReceiveBtn.addEventListener('click', () => {
         const uiValue = getBits(uiIn);
         const uioInValue = getBits(uioIn);
@@ -385,6 +414,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     exportCsvBtn.addEventListener('click', exportToCsv);
+
+    document.querySelectorAll('.diagram-type').forEach(select => {
+        select.addEventListener('change', updateDiagram);
+    });
 
     clearDataBtn.addEventListener('click', () => {
         historyData.length = 0;
