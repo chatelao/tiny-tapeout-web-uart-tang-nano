@@ -221,20 +221,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let puml = "@startuml\n";
+        puml += "<style>\n";
+        puml += "timingDiagram {\n";
+        puml += "  .input {\n";
+        puml += "    LineColor DarkRed\n";
+        puml += "  }\n";
+        puml += "}\n";
+        puml += "</style>\n";
 
         // Definitions
         channels.forEach(ch => {
             const type = config[ch];
             if (type === 'hidden') return;
 
+            const isInput = ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena'].includes(ch);
+            const stereotype = isInput ? ' <<input>>' : '';
+
             if (type === 'bits') {
                 for (let i = 7; i >= 0; i--) {
-                    puml += `binary "${ch}[${i}]" as ${ch}_${i}\n`;
+                    puml += `binary "${ch}[${i}]" as ${ch}_${i}${stereotype}\n`;
                 }
             } else if (type === 'binary') {
-                puml += `binary "${ch}" as ${ch}\n`;
+                puml += `binary "${ch}" as ${ch}${stereotype}\n`;
             } else {
-                puml += `concise "${ch}" as ${ch}\n`;
+                puml += `concise "${ch}" as ${ch}${stereotype}\n`;
             }
         });
         puml += "\n";
