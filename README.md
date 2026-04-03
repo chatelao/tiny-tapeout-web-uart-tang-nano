@@ -3,8 +3,6 @@
 ## Goal
 Create a Webinterface based on WebSerial for Tiny Tapeout designs running to a Tang Nano 4K.
 
-For a comprehensive overview of the port, including hardware details, installation, and usage, see the [Tang Nano 4K Tiny Tapeout Web Serial Port Guide](M3_MICROPYTHON.md).
-
 ## Default Architecture
 - **WebSerial**: The Browser communicates to the board over "WebSerial".
 - **Static Webpage**: The web access is handled with a simple static webpage, hosted on GitHub Pages, but deployable anywhere else.
