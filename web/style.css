@@ -46,6 +46,25 @@ h1 {
     font-size: 0.85rem;
 }
 
+/* Column hiding styles */
+.tester-table.hide-uio_in .col-uio_in > *:not(input[type="checkbox"]),
+.tester-table.hide-uio_out .col-uio_out > *:not(input[type="checkbox"]),
+.tester-table.hide-uio_oe .col-uio_oe > *:not(input[type="checkbox"]) {
+    display: none;
+}
+
+.tester-table.hide-uio_in td.col-uio_in,
+.tester-table.hide-uio_out td.col-uio_out,
+.tester-table.hide-uio_oe td.col-uio_oe {
+    background-color: #f0f0f0;
+}
+
+.tester-table input[type="checkbox"][id^="toggle-"] {
+    margin-right: 4px;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
 .input-row {
     background-color: #e7f3ff;
 }
