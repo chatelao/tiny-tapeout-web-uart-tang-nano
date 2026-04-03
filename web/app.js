@@ -1,13 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const transactionHistory = [];
     const uiIn = document.getElementById('ui_in').querySelectorAll('input');
     const uioIn = document.getElementById('uio_in').querySelectorAll('input');
+    const uiInHex = document.getElementById('ui_in_hex');
+    const uioInHex = document.getElementById('uio_in_hex');
+    const uiInReset = document.getElementById('ui_in_reset');
+    const uioInReset = document.getElementById('uio_in_reset');
     const clk = document.getElementById('clk');
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
+    const exportCsvBtn = document.getElementById('exportCsv');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
+    const historyData = [];
 
     function logToConsole(message) {
         const timestamp = new Date().toLocaleTimeString();
@@ -25,6 +30,41 @@ document.addEventListener('DOMContentLoaded', () => {
         return val;
     }
 
+    function updateHexFromBits(inputs, hexInput) {
+        const val = getBits(inputs);
+        hexInput.value = val.toString(16).padStart(2, '0').toUpperCase();
+    }
+
+    function updateBitsFromHex(hexInput, inputs) {
+        let val = parseInt(hexInput.value, 16);
+        if (isNaN(val)) val = 0;
+        val &= 0xFF;
+        inputs.forEach((input, index) => {
+            input.checked = (val >> (7 - index)) & 1;
+        });
+    }
+
+    uiIn.forEach(input => {
+        input.addEventListener('change', () => updateHexFromBits(uiIn, uiInHex));
+    });
+
+    uioIn.forEach(input => {
+        input.addEventListener('change', () => updateHexFromBits(uioIn, uioInHex));
+    });
+
+    uiInHex.addEventListener('input', () => updateBitsFromHex(uiInHex, uiIn));
+    uioInHex.addEventListener('input', () => updateBitsFromHex(uioInHex, uioIn));
+
+    uiInReset.addEventListener('click', () => {
+        uiInHex.value = '00';
+        updateBitsFromHex(uiInHex, uiIn);
+    });
+
+    uioInReset.addEventListener('click', () => {
+        uioInHex.value = '00';
+        updateBitsFromHex(uioInHex, uioIn);
+    });
+
     function createBitDisplay(value) {
         const container = document.createElement('div');
         container.className = 'bits-out';
@@ -35,12 +75,15 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = bitVal;
             container.appendChild(span);
         }
+        const hexSpan = document.createElement('span');
+        hexSpan.className = 'hex-display';
+        hexSpan.textContent = `0x${value.toString(16).padStart(2, '0').toUpperCase()}`;
+        container.appendChild(hexSpan);
         return container;
     }
 
-    function addHistoryRow(inputs, outputs) {
+    function addHistoryRow(inputs, outputs, timestamp) {
         const row = document.createElement('tr');
-        const timestamp = new Date().toLocaleTimeString();
 
         // Time
         const timeTd = document.createElement('td');
@@ -89,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function generatePlantUML() {
-        if (transactionHistory.length === 0) return "";
+        if (historyData.length === 0) return "";
 
         let puml = "@startuml\n";
         puml += "concise \"ui_in\" as ui_in\n";
@@ -102,16 +145,16 @@ document.addEventListener('DOMContentLoaded', () => {
         puml += "concise \"uio_oe\" as uio_oe\n\n";
 
         let time = 0;
-        transactionHistory.forEach((t) => {
+        historyData.forEach((t) => {
             puml += `@${time}\n`;
-            puml += `ui_in is "0x${t.inputs.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_in is "0x${t.inputs.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `clk is ${t.inputs.clk}\n`;
-            puml += `rst_n is ${t.inputs.rst_n}\n`;
-            puml += `ena is ${t.inputs.ena}\n`;
-            puml += `uo_out is "0x${t.outputs.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_out is "0x${t.outputs.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_oe is "0x${t.outputs.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `clk is ${t.clk}\n`;
+            puml += `rst_n is ${t.rst_n}\n`;
+            puml += `ena is ${t.ena}\n`;
+            puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
             time++;
         });
 
@@ -190,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+        const timestamp = new Date().toLocaleTimeString();
         const inputs = {
             ui_in: uiValue,
             uio_in: uioInValue,
@@ -209,10 +253,56 @@ document.addEventListener('DOMContentLoaded', () => {
             uio_oe: 0
         };
 
-        transactionHistory.push({ inputs: { ...inputs }, outputs: { ...outputs } });
-        addHistoryRow(inputs, outputs);
+        historyData.push({
+            time: timestamp,
+            ...inputs,
+            ...outputs
+        });
+
+        addHistoryRow(inputs, outputs, timestamp);
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
         updateDiagram();
+    }
+
+    function exportToCsv() {
+        if (historyData.length === 0) {
+            alert('No history to export');
+            return;
+        }
+
+        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const csvRows = [headers.join(',')];
+
+        for (const row of historyData) {
+            const values = [
+                `"${row.time}"`,
+                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
+                row.clk,
+                row.rst_n,
+                row.ena,
+                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
+            ];
+            csvRows.push(values.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'tiny_tapeout_history.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
     }
 
     sendReceiveBtn.addEventListener('click', () => {
@@ -230,6 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
             performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
     });
+
+    exportCsvBtn.addEventListener('click', exportToCsv);
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
     logToConsole('Note: WebSerial functionality is TBD');
