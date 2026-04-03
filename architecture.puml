@@ -18,12 +18,8 @@ Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
 
     Boundary(fabric, "FPGA Fabric") {
         Component(apb_slots, "APB2 Slots (0x40002400)", "Register-mapped", "TT Control and Data")
-        Component(psram_ctrl, "PSRAM Controller", "AHB (0xA0000000)", "W955D8MBYA (8MB)")
-        Component(flash_ctrl, "SPI Flash Interface", "AHB (0x60000000)", "XIP (4MB)")
 
         Rel(m3, apb_slots, "APB2 Expansion")
-        Rel(m3, psram_ctrl, "AHB Expansion")
-        Rel(m3, flash_ctrl, "AHB Expansion")
     }
 
     Component(int_flash, "Internal Flash (32KB)", "0x00000000", "Bootloader & Vectors")
@@ -35,11 +31,6 @@ Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
     Rel(m3, uart0, "APB")
 }
 
-Component_Ext(ext_psram, "External PSRAM", "Physical Chip", "8MB 166MHz")
-Component_Ext(ext_flash, "External SPI Flash", "Physical Chip", "4MB Tiny Tapeout Web Serial VFS")
-
-Rel(psram_ctrl, ext_psram, "DQ[15:0], SCLK, CS#")
-Rel(flash_ctrl, ext_flash, "MOSI, MISO, SCLK, CS#")
 Rel(user, browser, "Interacts with")
 Rel(browser, uart0, "WebSerial", "USB-C Bridge (Pins 18/19)")
 
