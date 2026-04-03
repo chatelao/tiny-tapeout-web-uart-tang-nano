@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiny Tapeout Web Tester</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 </head>
 <body>
     <div class="container-fluid">
@@ -88,6 +89,20 @@
                 </tbody>
             </table>
             <div class="tbd">WebSerial TBD</div>
+        </div>
+
+        <div class="panel testset-panel">
+            <h2>Testset Framework</h2>
+            <div class="testset-actions">
+                <select id="testsetSelect">
+                    <option value="">Loading testsets...</option>
+                </select>
+                <button id="loadTestset">Load</button>
+                <button id="runTestset" disabled>Run Testset</button>
+            </div>
+            <div id="testsetInfo" class="testset-info">
+                No testset loaded.
+            </div>
         </div>
 
         <div class="panel console-panel">

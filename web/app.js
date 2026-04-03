@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
     const clearDataBtn = document.getElementById('clearData');
+    const testsetSelect = document.getElementById('testsetSelect');
+    const loadTestsetBtn = document.getElementById('loadTestset');
+    const runTestsetBtn = document.getElementById('runTestset');
+    const testsetInfo = document.getElementById('testsetInfo');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
     const testerTable = document.querySelector('.tester-table');
@@ -27,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     const historyData = [];
+    let currentTestset = null;
 
     function logToConsole(message) {
         const timestamp = new Date().toLocaleTimeString();
@@ -386,6 +391,128 @@ document.addEventListener('DOMContentLoaded', () => {
         historyBody.innerHTML = '';
         consoleDiv.textContent = '';
         logToConsole('History and console cleared');
+    });
+
+    async function fetchTestsets() {
+        try {
+            const response = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const files = await response.json();
+
+            const yamlFiles = files.filter(file => file.name.endsWith('.yaml'));
+
+            testsetSelect.innerHTML = '<option value="">Select a testset...</option>';
+            yamlFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file.download_url;
+                option.textContent = file.name;
+                testsetSelect.appendChild(option);
+            });
+            logToConsole(`Fetched ${yamlFiles.length} testsets from GitHub`);
+        } catch (e) {
+            console.error('Failed to fetch testsets', e);
+            logToConsole('Failed to fetch testsets from GitHub');
+            testsetSelect.innerHTML = '<option value="">Error loading testsets</option>';
+        }
+    }
+
+    fetchTestsets();
+
+    runTestsetBtn.addEventListener('click', async () => {
+        if (!currentTestset || !currentTestset.test_steps) return;
+
+        logToConsole(`Running testset: ${currentTestset.project || 'Unnamed'}`);
+        runTestsetBtn.disabled = true;
+
+        // Initial state from UI
+        let uiVal = getBits(uiIn);
+        let uioVal = getBits(uioIn);
+        let rstVal = rstN.checked ? 1 : 0;
+        let enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+
+        for (const step of currentTestset.test_steps) {
+            logToConsole(`Executing step: ${step.name || 'unnamed'}`);
+
+            // Update state from step values if present
+            if (step.values) {
+                if (step.values.ui_in !== undefined) uiVal = step.values.ui_in & 0xFF;
+                if (step.values.uio_in !== undefined) uioVal = step.values.uio_in & 0xFF;
+                if (step.values.rst_n !== undefined) rstVal = step.values.rst_n ? 1 : 0;
+                if (step.values.ena !== undefined) enaVal = step.values.ena ? 1 : 0;
+            }
+
+            const numCycles = step.cycles || 1;
+            for (let i = 0; i < numCycles; i++) {
+                if (clkSelection === '1/0') {
+                    performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
+                    performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                } else {
+                    const cVal = parseInt(clkSelection);
+                    performTransaction(uiVal, uioVal, cVal, rstVal, enaVal);
+                }
+                // Yield to main thread
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+        logToConsole('Testset execution complete');
+        runTestsetBtn.disabled = false;
+    });
+
+    loadTestsetBtn.addEventListener('click', async () => {
+        const url = testsetSelect.value;
+        if (!url) {
+            alert('Please select a testset first');
+            return;
+        }
+
+        try {
+            logToConsole(`Loading testset from ${url}...`);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const yamlText = await response.text();
+
+            currentTestset = jsyaml.load(yamlText);
+            logToConsole(`Loaded testset: ${currentTestset.project || 'Unknown Project'}`);
+
+            testsetInfo.innerHTML = '';
+
+            const projectDiv = document.createElement('div');
+            const projectLabel = document.createElement('strong');
+            projectLabel.textContent = 'Project: ';
+            projectDiv.appendChild(projectLabel);
+            projectDiv.appendChild(document.createTextNode(currentTestset.project || 'N/A'));
+            testsetInfo.appendChild(projectDiv);
+
+            if (currentTestset.metadata && currentTestset.metadata.source) {
+                const sourceDiv = document.createElement('div');
+                const sourceLabel = document.createElement('strong');
+                sourceLabel.textContent = 'Source: ';
+                sourceDiv.appendChild(sourceLabel);
+                const sourceLink = document.createElement('a');
+                sourceLink.href = currentTestset.metadata.source;
+                sourceLink.target = '_blank';
+                sourceLink.textContent = currentTestset.metadata.source;
+                sourceDiv.appendChild(sourceLink);
+                testsetInfo.appendChild(sourceDiv);
+            }
+
+            if (currentTestset.test_steps) {
+                const stepsDiv = document.createElement('div');
+                const stepsLabel = document.createElement('strong');
+                stepsLabel.textContent = 'Steps: ';
+                stepsDiv.appendChild(stepsLabel);
+                stepsDiv.appendChild(document.createTextNode(currentTestset.test_steps.length));
+                testsetInfo.appendChild(stepsDiv);
+            }
+
+            runTestsetBtn.disabled = false;
+        } catch (e) {
+            console.error('Failed to load testset', e);
+            logToConsole('Failed to load testset');
+            testsetInfo.textContent = 'Error loading testset.';
+            runTestsetBtn.disabled = true;
+        }
     });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
