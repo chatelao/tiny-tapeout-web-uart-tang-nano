@@ -51,6 +51,7 @@ For detailed information on the Web Serial API features utilized in this project
 | `COMPLIANCE_TESTS.md` | Tiny Tapeout Web Serial compliance testing results | Planned |
 | `GEMINI.md` | Project goal and structural guidelines | Present |
 | `HOWTO_TINY_TAPEOUT.md` | Guide to loading and testing Tiny Tapeout modules | Planned |
+| `PMOD_PINOUT.md` | Documentation of common PMOD pinouts | Present |
 | `README.md` | Overview of the product | Present |
 | `ROADMAP.md` | Progress tracking and future steps | Planned |
 | `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Present |
