@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tang Nano 4K SRAM Flasher - Tiny Tapeout</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <h1>Tiny Tapeout Tools</h1>
+
+        <nav class="tabs">
+            <a href="index.html" class="tab-link">Web Tester</a>
+            <a href="flasher.html" class="tab-link active">SRAM Flasher</a>
+        </nav>
+
+        <div class="panel flasher-panel">
+            <h2>Tang Nano 4K SRAM Flasher</h2>
+            <p>Upload a bitstream file (.bst or .fs) to flash it directly to the Tang Nano 4K's SRAM.</p>
+
+            <div class="flasher-controls">
+                <div class="file-input-group">
+                    <label for="bitstreamInput" class="file-label">Select Bitstream:</label>
+                    <input type="file" id="bitstreamInput" accept=".bst,.fs" />
+                </div>
+                <button id="flashBtn" disabled>Flash to SRAM</button>
+            </div>
+
+            <div id="flasher-console" class="console">
+                [System] Waiting for user input...
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { openFPGALoader } from 'https://cdn.jsdelivr.net/npm/@yowasp/openfpgaloader/dist/web.js';
+
+        const fileInput = document.getElementById('bitstreamInput');
+        const flashBtn = document.getElementById('flashBtn');
+        const consoleDiv = document.getElementById('flasher-console');
+
+        function logToConsole(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '[Error] ' : '[System] ';
+            consoleDiv.textContent += `\n[${timestamp}] ${prefix}${message}`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        fileInput.addEventListener('change', () => {
+            flashBtn.disabled = !fileInput.files.length;
+            if (fileInput.files.length) {
+                logToConsole(`File selected: ${fileInput.files[0].name}`);
+            }
+        });
+
+        flashBtn.addEventListener('click', async () => {
+            flashBtn.disabled = true;
+            try {
+                const file = fileInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const bitstream = new Uint8Array(arrayBuffer);
+
+                logToConsole("Requesting WebUSB device (BL702)...");
+                const device = await navigator.usb.requestDevice({
+                    filters: [{ vendorId: 0x0403, productId: 0x6010 }]
+                });
+
+                logToConsole("Initializing JTAG and writing to SRAM...");
+                await openFPGALoader.flash(device, bitstream, { board: 'tangnano4k', target: 'sram' });
+
+                logToConsole("SRAM Flash Complete!", 'info');
+            } catch (err) {
+                logToConsole(err.message || err, 'error');
+                console.error("Flashing failed:", err);
+            } finally {
+                flashBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
