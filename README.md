@@ -1,7 +1,7 @@
 # Tiny Tapeout Web Serial for Tang Nano 4K
 
 ## Goal
-Create a Webinterface based on WebSerial for Tiny Tapeout designs running to a Tang Nano 4K.
+Create a [Webinterface](https://chatelao.github.io/tiny-tapeout-web-uart-tang-nano/) based on WebSerial for Tiny Tapeout designs running to a Tang Nano 4K.
 
 ## Default Architecture
 - **WebSerial**: The Browser communicates to the board over "WebSerial".
