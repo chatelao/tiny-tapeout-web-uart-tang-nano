@@ -1,0 +1,12 @@
+mach create
+machine LoadPlatformDescription @test/renode/m3.repl
+
+showAnalyzer uart0
+
+macro reset
+"""
+    sysbus LoadBinary @src/src/firmware.bin 0x0
+    cpu VectorTableOffset 0x0
+"""
+
+runMacro $reset
