@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const uioIn = document.getElementById('uio_in').querySelectorAll('input');
     const uiInHex = document.getElementById('ui_in_hex');
     const uioInHex = document.getElementById('uio_in_hex');
+    const uiInReset = document.getElementById('ui_in_reset');
+    const uioInReset = document.getElementById('uio_in_reset');
     const clk = document.getElementById('clk');
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
@@ -50,6 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     uiInHex.addEventListener('input', () => updateBitsFromHex(uiInHex, uiIn));
     uioInHex.addEventListener('input', () => updateBitsFromHex(uioInHex, uioIn));
+
+    uiInReset.addEventListener('click', () => {
+        uiInHex.value = '00';
+        updateBitsFromHex(uiInHex, uiIn);
+    });
+
+    uioInReset.addEventListener('click', () => {
+        uioInHex.value = '00';
+        updateBitsFromHex(uioInHex, uioIn);
+    });
 
     function createBitDisplay(value) {
         const container = document.createElement('div');
