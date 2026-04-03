@@ -12,12 +12,12 @@ module top (
     wire [15:0] m3_gpio;
 
     Gowin_EMPU_Top m3_inst (
-		.sys_clk(clk_27m),     //input sys_clk
+		.sys_clk(clk_27m),     // input sys_clk
 
-		.gpio(m3_gpio),        //inout [15:0] gpio
+		.gpio(m3_gpio),        // inout [15:0] gpio
 
-		.uart0_rxd(uart0_rxd), //input uart0_rxd
-		.uart0_txd(uart0_txd), //output uart0_txd
+		.uart0_rxd(uart0_rxd), // input  uart0_rxd
+		.uart0_txd(uart0_txd), // output uart0_txd
 
 		.reset_n(btn2_pin)
     );
