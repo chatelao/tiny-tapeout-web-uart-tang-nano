@@ -417,7 +417,13 @@ button:disabled {
     justify-content: center;
 }
 
-#diagram-img {
+#diagram-img.fit-width {
+    width: 100%;
+    height: auto;
+    max-height: none;
+}
+
+#diagram-img.more-details {
     max-height: 500px;
     max-width: none; /* Allow horizontal expansion */
 }
