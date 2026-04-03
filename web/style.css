@@ -195,6 +195,58 @@ button:hover {
     background-color: #a71d2a;
 }
 
+.testset-panel h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.testset-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+#testsetSelect {
+    flex-grow: 1;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+#loadTestset {
+    background-color: #28a745;
+}
+
+#loadTestset:hover {
+    background-color: #218838;
+}
+
+#runTestset {
+    background-color: #fd7e14;
+}
+
+#runTestset:hover {
+    background-color: #e46a06;
+}
+
+#runTestset:disabled {
+    background-color: #ffc291;
+    cursor: not-allowed;
+}
+
+.testset-info {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    border: 1px solid #eee;
+}
+
 .tbd {
     text-align: center;
     margin-top: 15px;
