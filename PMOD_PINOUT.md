@@ -2,10 +2,12 @@
 
 This document summarizes the recommended pinouts for common peripherals and protocols used with Tiny Tapeout designs. Using these common pinouts makes it easier to reuse boards and connect external hardware.
 
+Refer to the [Digilent Pmod Documentation](https://digilent.com/reference/pmod/start) and the [Pmod Interface Specification](https://digilent.com/reference/pmod/specification) for official hardware standards.
+
 ## Common Peripherals
 
 ### UART to USB
-Used for interacting with the design over a serial console via the builtin RP2040 on the demo board.
+Used for interacting with the design over a serial console via the builtin RP2040 on the demo board. Based on [Pmod USBUART](https://digilent.com/reference/pmod/pmodusbuart/start).
 
 | Signal | Option 1 | Option 2 |
 | :--- | :--- | :--- |
@@ -13,7 +15,7 @@ Used for interacting with the design over a serial console via the builtin RP204
 | **TX** | `uo_out[4]` | `uo_out[0]` |
 
 ### VGA Output
-Recommended pinout for the [Tiny VGA](https://github.com/mole99/tiny-vga) board.
+Recommended pinout for the [Tiny VGA](https://github.com/mole99/tiny-vga) board and [Pmod VGA](https://digilent.com/reference/pmod/pmodvga/start).
 
 | Signal | Pin |
 | :--- | :--- |
@@ -27,14 +29,14 @@ Recommended pinout for the [Tiny VGA](https://github.com/mole99/tiny-vga) board.
 | **hsync** | `uo_out[7]` |
 
 ### Audio Output
-Recommended pinout for the [TT Audio Pmod](https://github.com/MichaelBell/tt-audio-pmod).
+Recommended pinout for the [TT Audio Pmod](https://github.com/MichaelBell/tt-audio-pmod), [Pmod I2S2](https://digilent.com/reference/pmod/pmodi2s2/start), or [Pmod AMP2](https://digilent.com/reference/pmod/pmodamp2/start).
 
 | Signal | Pin (Mono) | Pin (Stereo Left) | Pin (Stereo Right) |
 | :--- | :--- | :--- | :--- |
 | **Audio Output** | `uio_out[7]` or `uo_out[7]` | `uio_out[6]` or `uo_out[6]` | `uio_out[7]` or `uo_out[7]` |
 
 ### SPI RAM
-Default configuration for [spi-ram-emu](https://github.com/MichaelBell/spi-ram-emu/).
+Default configuration for [spi-ram-emu](https://github.com/MichaelBell/spi-ram-emu/) and [Pmod SPIRAM](https://digilent.com/reference/pmod/pmodspiram/start).
 
 | Signal | Pin |
 | :--- | :--- |
