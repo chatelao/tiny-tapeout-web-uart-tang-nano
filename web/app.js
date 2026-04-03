@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const enaVal = ena.checked ? 1 : 0;
         const clkSelection = clk.value;
 
-        if (clkSelection === '1/0') {
+        if (clkSelection === '1/1') {
             performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
             performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
         } else {
