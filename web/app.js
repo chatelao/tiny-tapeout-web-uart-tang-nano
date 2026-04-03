@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         puml += "\n";
 
         let time = 0;
+        const lastState = {};
         historyData.forEach((t) => {
             puml += `@${time}\n`;
             channels.forEach(ch => {
@@ -238,24 +239,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const val = t[ch];
                 if (type === 'bits') {
+                    if (lastState[ch] === undefined) lastState[ch] = [];
                     for (let i = 7; i >= 0; i--) {
                         const bit = (val >> i) & 1;
-                        puml += `${ch}_${i} is ${bit}\n`;
+                        if (lastState[ch][i] !== bit) {
+                            puml += `${ch}_${i} is ${bit}\n`;
+                            lastState[ch][i] = bit;
+                        }
                     }
-                } else if (type === 'binary') {
-                    puml += `${ch} is ${val}\n`;
-                } else if (type === 'hex') {
-                    puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-                } else if (type === 'dec') {
-                    puml += `${ch} is "${val}"\n`;
-                } else if (type === 'bin') {
-                    puml += `${ch} is "0b${val.toString(2).padStart(8, '0')}"\n`;
-                } else if (type === 'fp8') {
-                    puml += `${ch} is "${formatFP8(val)}"\n`;
-                } else if (type === 'dual_fp4') {
-                    const high = formatFP4((val >> 4) & 0xF);
-                    const low = formatFP4(val & 0xF);
-                    puml += `${ch} is "${high} | ${low}"\n`;
+                } else {
+                    if (lastState[ch] !== val) {
+                        if (type === 'binary') {
+                            puml += `${ch} is ${val}\n`;
+                        } else if (type === 'hex') {
+                            puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                        } else if (type === 'dec') {
+                            puml += `${ch} is "${val}"\n`;
+                        } else if (type === 'bin') {
+                            puml += `${ch} is "0b${val.toString(2).padStart(8, '0')}"\n`;
+                        } else if (type === 'fp8') {
+                            puml += `${ch} is "${formatFP8(val)}"\n`;
+                        } else if (type === 'dual_fp4') {
+                            const high = formatFP4((val >> 4) & 0xF);
+                            const low = formatFP4(val & 0xF);
+                            puml += `${ch} is "${high} | ${low}"\n`;
+                        }
+                        lastState[ch] = val;
+                    }
                 }
             });
             time++;
