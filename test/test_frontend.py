@@ -33,7 +33,7 @@ def run_test():
                                 // Simulate response after a short delay
                                 if (text === 'reset\\n') {
                                     window.postMessage({ type: 'serial-rx', data: 'ok\\n' }, '*');
-                                } else if (text.length === 7) { // 6 hex + \n
+                                } else if (text.includes(';')) {
                                     // Respond with uo;01;uio;02;uio_oe;03\n
                                     window.postMessage({ type: 'serial-rx', data: 'uo;01;uio;02;uio_oe;03\\n' }, '*');
                                 }
