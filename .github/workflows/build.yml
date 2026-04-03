@@ -21,9 +21,10 @@ jobs:
           release: '10.3-2021.10'
 
       - name: Install OSS CAD Suite
-        uses: YosysHQ/setup-oss-cad-suite@v3
+        uses: YosysHQ/setup-oss-cad-suite@v4
         with:
           version: 'latest'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build project
         run: |

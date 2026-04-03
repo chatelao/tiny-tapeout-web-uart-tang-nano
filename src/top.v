@@ -54,6 +54,7 @@ module top (
         .SYS_CLK     (clk_27m),
         .UART0RXD    (uart_rx),
         .UART0TXD    (uart_tx),
+        .RESETN      (sys_reset_n),
 
         // APB2 Expansion
         .PSEL        (apb_psel),
@@ -86,4 +87,26 @@ module top (
         .debug_ena   (debug_ena)
     );
 
+endmodule
+
+// Blackbox definition for Gowin_EMPU_M3 to satisfy open-source tools
+module Gowin_EMPU_M3 (
+    input  wire        SYS_CLK,
+    input  wire        UART0RXD,
+    output wire        UART0TXD,
+    input  wire        RESETN,
+
+    // APB2 Expansion
+    output wire        PSEL,
+    output wire        PENABLE,
+    output wire [11:0] PADDR,
+    output wire        PWRITE,
+    output wire [31:0] PWDATA,
+    input  wire [31:0] PRDATA,
+    input  wire        PREADY,
+
+    // GPIO
+    output wire [15:0] GPIOO
+);
+    /* elective blackbox */
 endmodule
