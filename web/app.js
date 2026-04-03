@@ -10,8 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
+    const clearDataBtn = document.getElementById('clearData');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
+    const testerTable = document.querySelector('.tester-table');
+
+    // Column visibility toggles
+    ['uio_in', 'uio_out', 'uio_oe'].forEach(col => {
+        const toggle = document.getElementById(`toggle-${col}`);
+        toggle.addEventListener('change', () => {
+            if (toggle.checked) {
+                testerTable.classList.remove(`hide-${col}`);
+            } else {
+                testerTable.classList.add(`hide-${col}`);
+            }
+        });
+    });
     const historyData = [];
 
     function logToConsole(message) {
@@ -98,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // uio_in
         const uioInTd = document.createElement('td');
+        uioInTd.className = 'col-uio_in';
         uioInTd.appendChild(createBitDisplay(inputs.uio_in));
         row.appendChild(uioInTd);
 
@@ -115,11 +130,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // uio_out
         const uioOutTd = document.createElement('td');
+        uioOutTd.className = 'col-uio_out';
         uioOutTd.appendChild(createBitDisplay(outputs.uio_out));
         row.appendChild(uioOutTd);
 
         // uio_oe
         const uioOeTd = document.createElement('td');
+        uioOeTd.className = 'col-uio_oe';
         uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
         row.appendChild(uioOeTd);
 
@@ -395,6 +412,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.diagram-type').forEach(select => {
         select.addEventListener('change', updateDiagram);
+    });
+
+    clearDataBtn.addEventListener('click', () => {
+        historyData.length = 0;
+        historyBody.innerHTML = '';
+        consoleDiv.textContent = '';
+        logToConsole('History and console cleared');
     });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
