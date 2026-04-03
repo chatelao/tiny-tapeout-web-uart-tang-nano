@@ -25,4 +25,11 @@
 #define SRAM_BASE           (0x20000000)
 #define SRAM_SIZE           (22 * 1024)
 
+// --- Tiny Tapeout (APB2 Slot 1) ---
+#define TT_BASE             (0x40002400)
+#define REG_TT_DATA         (*(volatile uint32_t *)(TT_BASE + 0x00))
+#define REG_TT_UIO_DATA     (*(volatile uint32_t *)(TT_BASE + 0x04))
+#define REG_TT_UIO_OE       (*(volatile uint32_t *)(TT_BASE + 0x08))
+#define REG_TT_CTRL         (*(volatile uint32_t *)(TT_BASE + 0x0C))
+
 #endif // M3_REGS_H
