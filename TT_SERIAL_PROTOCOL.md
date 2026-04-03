@@ -27,15 +27,12 @@ Values:
 
 ### Response Format
 
-Compact Format (used for compact requests):
-- `[uo_out][uio_out][uio_oe]\n` (6 hex chars)
-
-Long Format (used for verbose/short requests):
+Long Format only:
 - `uo;[uo_out];uio;[uio_out];uio_oe;[uio_oe]\n`
 
-- `uo_out` (2 hex chars): Output data from the `uo_out[7:0]` pins.
-- `uio_out` (2 hex chars): Output data from the `uio_out[7:0]` pins.
-- `uio_oe` (2 hex chars): Output enable signals from the `uio_oe[7:0]` pins.
+- `uo_out`  (0x + 2 hex chars): Output data from the `uo_out[7:0]` pins.
+- `uio_out` (0x + 2 hex chars): Output data from the `uio_out[7:0]` pins.
+- `uio_oe`  (0x + 2 hex chars): Output enable signals from the `uio_oe[7:0]` pins.
 
 ## Special Commands
 
