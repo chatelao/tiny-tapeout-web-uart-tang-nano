@@ -13,6 +13,7 @@
         <div class="panel main-panel">
             <div class="table-actions">
                 <button id="exportCsv">Export CSV</button>
+                <button id="sendReceive">Send</button>
                 <button id="clearData">Reset</button>
             </div>
             <table class="tester-table">
@@ -27,7 +28,6 @@
                         <th>uo_out [7:0]</th>
                         <th>uio_out [7:0]</th>
                         <th>uio_oe [7:0]</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody class="input-section">
@@ -67,9 +67,6 @@
                         <td class="center-cell"><input type="checkbox" id="rst_n" checked></td>
                         <td class="center-cell"><input type="checkbox" id="ena" checked></td>
                         <td colspan="3" class="results-placeholder">Ready to send...</td>
-                        <td>
-                            <button id="sendReceive">Send</button>
-                        </td>
                     </tr>
                 </tbody>
                 <tbody id="history">

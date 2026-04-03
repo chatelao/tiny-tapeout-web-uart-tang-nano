@@ -188,11 +188,13 @@ button:hover {
 }
 
 #clearData {
-    background-color: #dc3545;
+    background-color: white;
+    color: #007bff;
+    border: 1px solid #007bff;
 }
 
 #clearData:hover {
-    background-color: #a71d2a;
+    background-color: #e7f3ff;
 }
 
 .tbd {

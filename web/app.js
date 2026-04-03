@@ -124,11 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
         row.appendChild(uioOeTd);
 
-        // Action placeholder
-        const actionTd = document.createElement('td');
-        actionTd.textContent = '-';
-        row.appendChild(actionTd);
-
         historyBody.prepend(row);
     }
 
@@ -369,6 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
         historyData.length = 0;
         historyBody.innerHTML = '';
         consoleDiv.textContent = '';
+        const diagramImg = document.getElementById('diagram-img');
+        diagramImg.src = '';
+        diagramImg.alt = 'Timing Diagram will appear here after first transaction';
         logToConsole('History and console cleared');
     });
 
