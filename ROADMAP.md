@@ -6,6 +6,7 @@
 - [x] WebSerial protocol definition (TT_SERIAL.md)
 - [x] Implement SRAM Flasher web tool
 - [x] Update web application to support WebSerial communication
+- [x] Add emulated QSPI Flash and PSRAM Virtual PMODs
 
 ## Next 5 Steps
 - [ ] Implement TT_SERIAL protocol in Cortex-M3 C firmware

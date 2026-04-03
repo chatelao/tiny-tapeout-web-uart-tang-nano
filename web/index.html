@@ -116,6 +116,19 @@
             </div>
         </div>
 
+        <div class="panel pmod-panel">
+            <h2>Virtual PMODs (QSPI Flash & PSRAM)</h2>
+            <div class="pmod-controls">
+                <label>
+                    <input type="checkbox" id="pmodEnable"> Enable PMOD Emulation (uio[0]=CS0, uio[6]=CS1, uio[7]=CS2, uio[1]=MOSI, uio[2]=MISO, uio[3]=SCK)
+                </label>
+                <button id="pmodReset">Reset Memory</button>
+            </div>
+            <div id="pmodStatus" class="pmod-status">
+                PMOD Emulation is disabled.
+            </div>
+        </div>
+
         <div class="panel console-panel">
             <h2>Serial Console</h2>
             <div id="console" class="console"></div>
