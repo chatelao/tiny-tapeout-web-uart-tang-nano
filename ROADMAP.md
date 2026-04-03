@@ -4,6 +4,7 @@
 - [x] Initial project structure
 - [x] Web interface skeleton
 - [x] WebSerial protocol definition (TT_SERIAL.md)
+- [x] Implement SRAM Flasher web tool
 
 ## Next 5 Steps
 - [ ] Implement TT_SERIAL protocol in Cortex-M3 C firmware
