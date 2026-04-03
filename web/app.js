@@ -135,11 +135,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (historyData.length === 0) return "";
 
         let puml = "@startuml\n";
-        puml += "concise \"ui_in\" as ui_in\n";
-        puml += "concise \"uio_in\" as uio_in\n";
-        puml += "binary \"clk\" as clk\n";
-        puml += "binary \"rst_n\" as rst_n\n";
-        puml += "binary \"ena\" as ena\n";
+        puml += "<style>\n";
+        puml += "timingDiagram {\n";
+        puml += "  .input {\n";
+        puml += "    LineColor DarkRed\n";
+        puml += "  }\n";
+        puml += "}\n";
+        puml += "</style>\n";
+        puml += "concise \"ui_in\" as ui_in <<input>>\n";
+        puml += "concise \"uio_in\" as uio_in <<input>>\n";
+        puml += "binary \"clk\" as clk <<input>>\n";
+        puml += "binary \"rst_n\" as rst_n <<input>>\n";
+        puml += "binary \"ena\" as ena <<input>>\n";
         puml += "concise \"uo_out\" as uo_out\n";
         puml += "concise \"uio_out\" as uio_out\n";
         puml += "concise \"uio_oe\" as uio_oe\n\n";
