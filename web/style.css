@@ -315,7 +315,7 @@ button:hover {
     gap: 15px;
 }
 
-#statusLabel {
+#statusLabel, .status-label {
     font-size: 0.9rem;
     color: #65676b;
     font-weight: bold;
