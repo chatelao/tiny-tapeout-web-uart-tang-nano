@@ -5,8 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
+    const exportCsvBtn = document.getElementById('exportCsv');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
+    const historyData = [];
 
     function logToConsole(message) {
         const timestamp = new Date().toLocaleTimeString();
@@ -37,9 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return container;
     }
 
-    function addHistoryRow(inputs, outputs) {
+    function addHistoryRow(inputs, outputs, timestamp) {
         const row = document.createElement('tr');
-        const timestamp = new Date().toLocaleTimeString();
 
         // Time
         const timeTd = document.createElement('td');
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+        const timestamp = new Date().toLocaleTimeString();
         const inputs = {
             ui_in: uiValue,
             uio_in: uioInValue,
@@ -107,8 +109,55 @@ document.addEventListener('DOMContentLoaded', () => {
             uio_oe: 0
         };
 
-        addHistoryRow(inputs, outputs);
+        historyData.push({
+            time: timestamp,
+            ...inputs,
+            ...outputs
+        });
+
+        addHistoryRow(inputs, outputs, timestamp);
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
+    }
+
+    function exportToCsv() {
+        if (historyData.length === 0) {
+            alert('No history to export');
+            return;
+        }
+
+        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const csvRows = [headers.join(',')];
+
+        for (const row of historyData) {
+            const values = [
+                `"${row.time}"`,
+                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
+                row.clk,
+                row.rst_n,
+                row.ena,
+                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
+            ];
+            csvRows.push(values.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'tiny_tapeout_history.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
     }
 
     sendReceiveBtn.addEventListener('click', () => {
@@ -126,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
             performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
     });
+
+    exportCsvBtn.addEventListener('click', exportToCsv);
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
     logToConsole('Note: WebSerial functionality is TBD');
