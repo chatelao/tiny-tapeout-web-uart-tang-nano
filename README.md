@@ -16,31 +16,7 @@ The diagram below shows the high-level integration of the Tiny Tapeout Web Seria
 
 ## Supported Tiny Tapeout Web Serial Features
 
-| Module / Feature | Description |
-| :--- | :--- |
-| **Core Modules** | `machine`, `time`/`utime`, `uos`, `io` |
-| **Pin** | GPIO control (0-15) with hardware interrupt support |
-| **Timer** | Hardware timers for periodic or one-shot events |
-| **PWM** | Hardware-based Pulse Width Modulation |
-| **ADC** | 12-bit Analog-to-Digital Converter |
-| **I2C / SoftI2C** | Hardware and software I2C Master support |
-| **SPI / SoftSPI** | Hardware and software SPI Master support |
-| **RTC** | Real-Time Clock for date and time management |
-| **WDT** | Hardware Watchdog Timer |
-| **FPGABridge** | Low-level access to the 16-bit M3-to-FPGA GPIO bridge (See [FPGA_BRIDGE_USAGE.md](FPGA_BRIDGE_USAGE.md)) |
-| **NEORV32** | Integration example for the NEORV32 RISC-V co-processor (See `examples/cpus/neorv32/`) |
-| **SERV RISC-V** | Example of running a RISC-V core in the FPGA fabric (See `examples/cpus/serv_riscv/`) |
-| **Runtime** | Garbage Collector, REPL over UART0 |
-
-## Unsupported Features
-
-| Feature | Status / Reason |
-| :--- | :--- |
-| **Floating-point** | No hardware or software support (`MICROPY_PY_BUILTINS_FLOAT=0`) |
-| **Math Module** | Disabled to save flash space |
-| **Asynchronous** | `asyncio` and `async`/`await` are currently not supported |
-| **Connectivity** | No built-in network or Bluetooth stacks |
-| **Big Integers** | Arbitrary-precision integer support is disabled |
+<tbd later>
 
 ## Memory Layout
 
@@ -70,8 +46,6 @@ The diagram below shows the high-level integration of the Tiny Tapeout Web Seria
 | `COMPLIANCE_TESTS.md` | Tiny Tapeout Web Serial compliance testing results | Planned |
 | `GEMINI.md` | Project goal and structural guidelines | Present |
 | `HOWTO_TINY_TAPEOUT.md` | Guide to loading and testing Tiny Tapeout modules | Planned |
-| `M3_FPGA_INTEGRATIONS.md` | Guide to communication interfaces between M3 and FPGA | Planned |
-| `M3_MICROPYTHON.md` | Supported Tiny Tapeout Web Serial features and port guide | Planned |
 | `README.md` | Overview of the product | Present |
 | `ROADMAP.md` | Progress tracking and future steps | Planned |
 | `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Planned |
@@ -84,20 +58,8 @@ The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 periphera
 
 | Signal | FPGA Pin | Description |
 | :--- | :--- | :--- |
-| **UART0 RX** | 19 (IOB13B) | Receive data input |
-| **UART0 TX** | 18 (IOB13A) | Transmit data output |
-
-### Terminal Settings
-
-| Parameter | Value |
-| :--- | :--- |
-| **Baud Rate** | 115200 |
-| **Data Bits** | 8 |
-| **Parity** | None |
-| **Stop Bits** | 1 |
-| **Flow Control** | None (8N1) |
-
-For detailed serial port instructions, see [SERIAL_PORT_ACCESS.md](SERIAL_PORT_ACCESS.md).
+| **UART0 RX** | 44 (IOB13B) | Receive data input |
+| **UART0 TX** | 46 (IOB13A) | Transmit data output |
 
 ## Pinout Tang Nano 4K
 
