@@ -31,9 +31,11 @@ Recommended pinout for the [Tiny VGA](https://github.com/mole99/tiny-vga) board 
 ### Audio Output
 Recommended pinout for the [TT Audio Pmod](https://github.com/MichaelBell/tt-audio-pmod), [Pmod I2S2](https://digilent.com/reference/pmod/pmodi2s2/start), or [Pmod AMP2](https://digilent.com/reference/pmod/pmodamp2/start).
 
-| Signal | Pin (Mono) | Pin (Stereo Left) | Pin (Stereo Right) |
-| :--- | :--- | :--- | :--- |
-| **Audio Output** | `uio_out[7]` or `uo_out[7]` | `uio_out[6]` or `uo_out[6]` | `uio_out[7]` or `uo_out[7]` |
+| Signal | Pin |
+| :--- | :--- |
+| **Mono** | `uio_out[7]` or `uo_out[7]` |
+| **Stereo Left** | `uio_out[6]` or `uo_out[6]` |
+| **Stereo Right** | `uio_out[7]` or `uo_out[7]` |
 
 ### SPI RAM
 Default configuration for [spi-ram-emu](https://github.com/MichaelBell/spi-ram-emu/) and [Pmod SPIRAM](https://digilent.com/reference/pmod/pmodspiram/start).
