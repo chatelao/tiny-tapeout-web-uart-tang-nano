@@ -29,7 +29,7 @@ firmware.bin: firmware.elf
 
 bitstream.fs: top.v tt_wrapper.v tt_project.v top.cst
 	$(YOSYS) -p "synth_gowin -top top -json top.json" top.v tt_wrapper.v tt_project.v
-	$(NEXTPNR) --device GW1NSR-LV4CQN48PC7/I6 --family GW1NS-4 --json top.json --write top_pnr.json --vopt family=GW1NS-4 --vopt device=GW1NSR-4C --cst top.cst
+	$(NEXTPNR) --device GW1NSR-LV4CQN48PC7/I6 --json top.json --write top_pnr.json --vopt cst=top.cst
 	$(GOWIN_PACK) -d GW1NS-4 top_pnr.json $@
 
 clean:
