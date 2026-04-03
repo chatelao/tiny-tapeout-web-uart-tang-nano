@@ -23,6 +23,112 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
     const testerTable = document.querySelector('.tester-table');
+    const connectBtn = document.getElementById('connectBtn');
+    const statusLabel = document.getElementById('statusLabel');
+
+    let port = null;
+    let reader = null;
+    let writer = null;
+    let isConnected = false;
+
+    async function connect() {
+        try {
+            port = await navigator.serial.requestPort();
+            await port.open({ baudRate: 115200 });
+
+            writer = port.writable.getWriter();
+
+            isConnected = true;
+            connectBtn.textContent = 'Simulation';
+            statusLabel.textContent = 'Connected';
+            logToConsole('Connected to serial port');
+
+            // Send reset command on connect
+            const encoder = new TextEncoder();
+            await writer.write(encoder.encode('reset\n'));
+            logToConsole('Sent reset command');
+
+            // Set up reader
+            readLoop();
+
+        } catch (e) {
+            console.error('Failed to connect', e);
+            logToConsole('Failed to connect: ' + e.message);
+            isConnected = false;
+        }
+    }
+
+    async function disconnect() {
+        try {
+            if (reader) {
+                await reader.cancel();
+            }
+            if (writer) {
+                writer.releaseLock();
+                writer = null;
+            }
+            if (port) {
+                await port.close();
+                port = null;
+            }
+        } catch (e) {
+            console.error('Error during disconnect', e);
+        } finally {
+            isConnected = false;
+            connectBtn.textContent = 'Connect';
+            statusLabel.textContent = 'Simulation Mode';
+            logToConsole('Disconnected/Simulation mode active');
+        }
+    }
+
+    async function readLoop() {
+        const decoder = new TextDecoder();
+        while (port && port.readable && isConnected) {
+            try {
+                reader = port.readable.getReader();
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    if (value) {
+                        const text = decoder.decode(value);
+                        serialBuffer += text;
+                        if (serialBuffer.includes('\n')) {
+                            const lines = serialBuffer.split('\n');
+                            serialBuffer = lines.pop(); // keep partial line
+                            for (const line of lines) {
+                                const trimmedLine = line.trim();
+                                if (trimmedLine === "") continue;
+                                if (trimmedLine.startsWith("uo;")) {
+                                    if (serialDataPromiseResolve) {
+                                        serialDataPromiseResolve(trimmedLine);
+                                        serialDataPromiseResolve = null;
+                                    }
+                                } else if (trimmedLine === "ok") {
+                                    logToConsole("Serial RX: ok");
+                                } else {
+                                    logToConsole(`Serial RX: ${trimmedLine}`);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Read error', e);
+                break;
+            } finally {
+                reader.releaseLock();
+                reader = null;
+            }
+        }
+    }
+
+    connectBtn.addEventListener('click', () => {
+        if (isConnected) {
+            disconnect();
+        } else {
+            connect();
+        }
+    });
 
     // Column visibility toggles
     ['uio_in', 'uio_out', 'uio_oe'].forEach(col => {
@@ -365,7 +471,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
+    function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+        // Emulate behavior: Summing ui_in and uio_in
+        const result = (uiValue + uioInValue) & 0xFF;
+        return {
+            uo_out: result,
+            uio_out: 0,
+            uio_oe: 0
+        };
+    }
+
+    let serialDataPromiseResolve = null;
+    let serialBuffer = "";
+
+    async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
         const timestamp = new Date().toLocaleTimeString();
         const inputs = {
             ui_in: uiValue,
@@ -377,14 +496,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
         logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0')}, uio_in=0x${uioInValue.toString(16).padStart(2, '0')}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
 
-        // Emulate behavior: Summing ui_in and uio_in
-        const result = (uiValue + uioInValue) & 0xFF;
+        let outputs;
 
-        const outputs = {
-            uo_out: result,
-            uio_out: 0,
-            uio_oe: 0
-        };
+        if (isConnected) {
+            const ctrl = (clkVal & 1) | ((rstVal & 1) << 1) | ((enaVal & 1) << 2);
+            const command = uiValue.toString(16).padStart(2, '0') +
+                            uioInValue.toString(16).padStart(2, '0') +
+                            ctrl.toString(16).padStart(2, '0') + '\n';
+
+            const encoder = new TextEncoder();
+            const promise = new Promise(resolve => {
+                serialDataPromiseResolve = resolve;
+            });
+
+            await writer.write(encoder.encode(command));
+
+            // Timeout after 1 second if no response
+            const timeout = setTimeout(() => {
+                if (serialDataPromiseResolve) {
+                    serialDataPromiseResolve(null);
+                    serialDataPromiseResolve = null;
+                }
+            }, 1000);
+
+            const response = await promise;
+            clearTimeout(timeout);
+
+            if (response) {
+                // Parse: uo;[uo_out];uio;[uio_out];uio_oe;[uio_oe]\n
+                const parts = response.split(';');
+                outputs = {
+                    uo_out: parts[1] ? parseInt(parts[1], 16) : 0,
+                    uio_out: parts[3] ? parseInt(parts[3], 16) : 0,
+                    uio_oe: parts[5] ? parseInt(parts[5], 16) : 0
+                };
+                logToConsole(`Received (Serial): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0')}`);
+            } else {
+                logToConsole('Error: Serial transaction timed out');
+                outputs = { uo_out: 0, uio_out: 0, uio_oe: 0 };
+            }
+        } else {
+            outputs = mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal);
+            logToConsole(`Received (Emulated): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0')}`);
+        }
 
         historyData.push({
             time: timestamp,
@@ -393,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         addHistoryRow(inputs, outputs, timestamp);
-        logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
         if (!skipUpdate) updateDiagram();
     }
 
@@ -438,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
-    sendReceiveBtn.addEventListener('click', () => {
+    sendReceiveBtn.addEventListener('click', async () => {
         const uiValue = getBits(uiIn);
         const uioInValue = getBits(uioIn);
         const rstVal = rstN.checked ? 1 : 0;
@@ -446,11 +599,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const clkSelection = clk.value;
 
         if (clkSelection === '1/0') {
-            performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
-            performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
         } else {
             const clkVal = parseInt(clkSelection);
-            performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
     });
 
@@ -482,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const rstVal = colMap.rst_n !== -1 ? parseVal(values[colMap.rst_n]) : 1;
                 const enaVal = colMap.ena !== -1 ? parseVal(values[colMap.ena]) : 1;
 
-                performTransaction(uiInVal, uioInVal, clkVal, rstVal, enaVal, true);
+                await performTransaction(uiInVal, uioInVal, clkVal, rstVal, enaVal, true);
 
                 // Yield to main thread every 10 rows
                 if (i % 10 === 0) {
@@ -619,11 +772,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const numCycles = step.cycles || 1;
             for (let i = 0; i < numCycles; i++) {
                 if (clkSelection === '1/0') {
-                    performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
-                    performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
                 } else {
                     const cVal = parseInt(clkSelection);
-                    performTransaction(uiVal, uioVal, cVal, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, cVal, rstVal, enaVal);
                 }
                 // Yield to main thread
                 await new Promise(r => setTimeout(r, 0));
@@ -699,5 +852,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
-    logToConsole('Note: WebSerial functionality is TBD');
 });

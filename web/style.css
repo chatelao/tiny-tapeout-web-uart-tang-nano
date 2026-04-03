@@ -306,11 +306,19 @@ button:hover {
     border: 1px solid #eee;
 }
 
-.tbd {
+.serial-controls {
     text-align: center;
     margin-top: 15px;
-    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+#statusLabel {
+    font-size: 0.9rem;
     color: #65676b;
+    font-weight: bold;
 }
 
 .console-panel h2 {
