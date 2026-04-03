@@ -21,6 +21,7 @@
                 <button id="exportCsv">Export CSV</button>
                 <button id="importCsv">Import CSV</button>
                 <input type="file" id="importCsvFile" accept=".csv" style="display: none;">
+                <button id="sendReceive">Send</button>
                 <button id="clearData">Reset</button>
             </div>
             <div class="table-responsive">
@@ -45,7 +46,6 @@
                             <input type="checkbox" id="toggle-uio_oe" checked title="Toggle uio_oe visibility">
                             uio_oe [7:0]
                         </th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody class="input-section">
@@ -87,9 +87,6 @@
                         <td class="results-placeholder">Ready to send...</td>
                         <td class="col-uio_out results-placeholder"></td>
                         <td class="col-uio_oe results-placeholder"></td>
-                        <td>
-                            <button id="sendReceive">Send</button>
-                        </td>
                     </tr>
                 </tbody>
                 <tbody id="history">

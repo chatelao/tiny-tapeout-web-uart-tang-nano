@@ -267,11 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
         row.appendChild(uioOeTd);
 
-        // Action placeholder
-        const actionTd = document.createElement('td');
-        actionTd.textContent = '-';
-        row.appendChild(actionTd);
-
         historyBody.prepend(row);
     }
 
