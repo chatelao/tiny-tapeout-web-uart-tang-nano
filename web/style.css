@@ -68,13 +68,46 @@ h1 {
     justify-content: center;
 }
 
+.hex-entry {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    padding-left: 4px;
+}
+
+.hex-prefix {
+    font-family: monospace;
+    color: #65676b;
+    font-size: 0.9rem;
+}
+
 .hex-input {
-    width: 35px;
+    width: 25px;
     font-family: monospace;
     text-align: center;
     padding: 2px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: none;
+    outline: none;
+}
+
+.hex-reset {
+    color: #dc3545;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: 1.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hex-reset:hover {
+    color: #a71d2a;
+    background: none;
 }
 
 .hex-display {
@@ -159,7 +192,7 @@ button:hover {
     display: flex;
     gap: 4px;
     justify-content: center;
-    min-width: 180px;
+    min-width: 280px;
 }
 
 .tbd {

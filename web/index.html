@@ -34,7 +34,11 @@
                                 <div class="bits" id="ui_in">
                                     <input type="checkbox" title="7"><input type="checkbox" title="6"><input type="checkbox" title="5"><input type="checkbox" title="4"><input type="checkbox" title="3"><input type="checkbox" title="2"><input type="checkbox" title="1"><input type="checkbox" title="0">
                                 </div>
-                                <input type="text" class="hex-input" id="ui_in_hex" maxlength="2" value="00">
+                                <div class="hex-entry">
+                                    <span class="hex-prefix">0x</span>
+                                    <input type="text" class="hex-input" id="ui_in_hex" maxlength="2" value="00">
+                                    <button class="hex-reset" id="ui_in_reset" title="Reset to 0x00">&times;</button>
+                                </div>
                             </div>
                         </td>
                         <td>
@@ -42,7 +46,11 @@
                                 <div class="bits" id="uio_in">
                                     <input type="checkbox" title="7"><input type="checkbox" title="6"><input type="checkbox" title="5"><input type="checkbox" title="4"><input type="checkbox" title="3"><input type="checkbox" title="2"><input type="checkbox" title="1"><input type="checkbox" title="0">
                                 </div>
-                                <input type="text" class="hex-input" id="uio_in_hex" maxlength="2" value="00">
+                                <div class="hex-entry">
+                                    <span class="hex-prefix">0x</span>
+                                    <input type="text" class="hex-input" id="uio_in_hex" maxlength="2" value="00">
+                                    <button class="hex-reset" id="uio_in_reset" title="Reset to 0x00">&times;</button>
+                                </div>
                             </div>
                         </td>
                         <td class="center-cell">
@@ -59,6 +67,7 @@
                             <button id="sendReceive">Send</button>
                             <button id="resetBtn" class="btn-secondary">Reset</button>
                             <button id="clearBtn" class="btn-danger">Clear</button>
+                            <button id="exportCsv" class="btn-secondary">Export CSV</button>
                         </td>
                     </tr>
                 </tbody>
