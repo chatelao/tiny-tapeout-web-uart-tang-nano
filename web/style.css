@@ -172,13 +172,27 @@ button:hover {
     background-color: #0056b3;
 }
 
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
 #exportCsv {
     background-color: #6c757d;
-    margin-left: 5px;
 }
 
 #exportCsv:hover {
     background-color: #5a6268;
+}
+
+#clearData {
+    background-color: #dc3545;
+}
+
+#clearData:hover {
+    background-color: #a71d2a;
 }
 
 .tbd {
