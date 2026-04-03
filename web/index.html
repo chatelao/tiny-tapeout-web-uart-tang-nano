@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tiny Tapeout Web Tester</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
 </head>
 <body>
     <div class="container-fluid">
         <h1>Tiny Tapeout Web Tester</h1>
+
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-link active">Web Tester</a>
+            <a href="flasher.html" class="nav-link">SRAM Flasher</a>
+        </nav>
 
         <div class="panel main-panel">
             <div class="table-actions">
@@ -105,6 +111,20 @@
             <div class="tbd">WebSerial TBD</div>
         </div>
 
+        <div class="panel testset-panel">
+            <h2>Testset Framework</h2>
+            <div class="testset-actions">
+                <select id="testsetSelect">
+                    <option value="">Loading testsets...</option>
+                </select>
+                <button id="loadTestset">Load</button>
+                <button id="runTestset" disabled>Run Testset</button>
+            </div>
+            <div id="testsetInfo" class="testset-info">
+                No testset loaded.
+            </div>
+        </div>
+
         <div class="panel console-panel">
             <h2>Serial Console</h2>
             <div id="console" class="console"></div>
@@ -112,6 +132,89 @@
 
         <div class="panel diagram-panel">
             <h2>Timing Diagram</h2>
+            <div class="diagram-controls">
+                <div class="control-group">
+                    <label for="type-ui_in">ui_in:</label>
+                    <select id="type-ui_in" class="diagram-type">
+                        <option value="hex" selected>Hex</option>
+                        <option value="dec">Dec</option>
+                        <option value="bin">Bin</option>
+                        <option value="bits">Bits</option>
+                        <option value="fp8">FP8</option>
+                        <option value="dual_fp4">Dual FP4</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-uio_in">uio_in:</label>
+                    <select id="type-uio_in" class="diagram-type">
+                        <option value="hex" selected>Hex</option>
+                        <option value="dec">Dec</option>
+                        <option value="bin">Bin</option>
+                        <option value="bits">Bits</option>
+                        <option value="fp8">FP8</option>
+                        <option value="dual_fp4">Dual FP4</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-clk">clk:</label>
+                    <select id="type-clk" class="diagram-type">
+                        <option value="binary" selected>Binary</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-rst_n">rst_n:</label>
+                    <select id="type-rst_n" class="diagram-type">
+                        <option value="binary" selected>Binary</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-ena">ena:</label>
+                    <select id="type-ena" class="diagram-type">
+                        <option value="binary" selected>Binary</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-uo_out">uo_out:</label>
+                    <select id="type-uo_out" class="diagram-type">
+                        <option value="hex" selected>Hex</option>
+                        <option value="dec">Dec</option>
+                        <option value="bin">Bin</option>
+                        <option value="bits">Bits</option>
+                        <option value="fp8">FP8</option>
+                        <option value="dual_fp4">Dual FP4</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-uio_out">uio_out:</label>
+                    <select id="type-uio_out" class="diagram-type">
+                        <option value="hex" selected>Hex</option>
+                        <option value="dec">Dec</option>
+                        <option value="bin">Bin</option>
+                        <option value="bits">Bits</option>
+                        <option value="fp8">FP8</option>
+                        <option value="dual_fp4">Dual FP4</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="type-uio_oe">uio_oe:</label>
+                    <select id="type-uio_oe" class="diagram-type">
+                        <option value="hex" selected>Hex</option>
+                        <option value="dec">Dec</option>
+                        <option value="bin">Bin</option>
+                        <option value="bits">Bits</option>
+                        <option value="fp8">FP8</option>
+                        <option value="dual_fp4">Dual FP4</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
+            </div>
             <div id="diagram-container">
                 <img id="diagram-img" alt="Timing Diagram will appear here after first transaction" />
             </div>
