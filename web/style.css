@@ -47,13 +47,23 @@ h1 {
 }
 
 /* Column hiding styles */
+.tester-table.hide-ui_in .col-ui_in > *:not(input[type="checkbox"]),
 .tester-table.hide-uio_in .col-uio_in > *:not(input[type="checkbox"]),
+.tester-table.hide-clk .col-clk > *:not(input[type="checkbox"]),
+.tester-table.hide-rst_n .col-rst_n > *:not(input[type="checkbox"]),
+.tester-table.hide-ena .col-ena > *:not(input[type="checkbox"]),
+.tester-table.hide-uo_out .col-uo_out > *:not(input[type="checkbox"]),
 .tester-table.hide-uio_out .col-uio_out > *:not(input[type="checkbox"]),
 .tester-table.hide-uio_oe .col-uio_oe > *:not(input[type="checkbox"]) {
     display: none;
 }
 
+.tester-table.hide-ui_in td.col-ui_in,
 .tester-table.hide-uio_in td.col-uio_in,
+.tester-table.hide-clk td.col-clk,
+.tester-table.hide-rst_n td.col-rst_n,
+.tester-table.hide-ena td.col-ena,
+.tester-table.hide-uo_out td.col-uo_out,
 .tester-table.hide-uio_out td.col-uio_out,
 .tester-table.hide-uio_oe td.col-uio_oe {
     background-color: #f0f0f0;

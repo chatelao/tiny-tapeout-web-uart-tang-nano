@@ -16,14 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const testerTable = document.querySelector('.tester-table');
 
     // Column visibility toggles
-    ['uio_in', 'uio_out', 'uio_oe'].forEach(col => {
-        const toggle = document.getElementById(`toggle-${col}`);
+    document.querySelectorAll('input[type="checkbox"][id^="toggle-"]').forEach(toggle => {
+        const col = toggle.id.replace('toggle-', '');
         toggle.addEventListener('change', () => {
             if (toggle.checked) {
                 testerTable.classList.remove(`hide-${col}`);
             } else {
                 testerTable.classList.add(`hide-${col}`);
             }
+            updateDiagram();
         });
     });
     const historyData = [];
@@ -107,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ui_in
         const uiInTd = document.createElement('td');
+        uiInTd.className = 'col-ui_in';
         uiInTd.appendChild(createBitDisplay(inputs.ui_in));
         row.appendChild(uiInTd);
 
@@ -116,15 +118,27 @@ document.addEventListener('DOMContentLoaded', () => {
         uioInTd.appendChild(createBitDisplay(inputs.uio_in));
         row.appendChild(uioInTd);
 
-        // clk, rst_n, ena
-        [inputs.clk, inputs.rst_n, inputs.ena].forEach(val => {
-            const td = document.createElement('td');
-            td.textContent = val;
-            row.appendChild(td);
-        });
+        // clk
+        const clkTd = document.createElement('td');
+        clkTd.className = 'col-clk';
+        clkTd.textContent = inputs.clk;
+        row.appendChild(clkTd);
+
+        // rst_n
+        const rstTd = document.createElement('td');
+        rstTd.className = 'col-rst_n';
+        rstTd.textContent = inputs.rst_n;
+        row.appendChild(rstTd);
+
+        // ena
+        const enaTd = document.createElement('td');
+        enaTd.className = 'col-ena';
+        enaTd.textContent = inputs.ena;
+        row.appendChild(enaTd);
 
         // uo_out
         const uoOutTd = document.createElement('td');
+        uoOutTd.className = 'col-uo_out';
         uoOutTd.appendChild(createBitDisplay(outputs.uo_out));
         row.appendChild(uoOutTd);
 
@@ -151,27 +165,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function generatePlantUML() {
         if (historyData.length === 0) return "";
 
+        const showUiIn = document.getElementById('toggle-ui_in').checked;
+        const showUioIn = document.getElementById('toggle-uio_in').checked;
+        const showClk = document.getElementById('toggle-clk').checked;
+        const showRstN = document.getElementById('toggle-rst_n').checked;
+        const showEna = document.getElementById('toggle-ena').checked;
+        const showUoOut = document.getElementById('toggle-uo_out').checked;
+        const showUioOut = document.getElementById('toggle-uio_out').checked;
+        const showUioOe = document.getElementById('toggle-uio_oe').checked;
+
         let puml = "@startuml\n";
-        puml += "concise \"ui_in\" as ui_in\n";
-        puml += "concise \"uio_in\" as uio_in\n";
-        puml += "binary \"clk\" as clk\n";
-        puml += "binary \"rst_n\" as rst_n\n";
-        puml += "binary \"ena\" as ena\n";
-        puml += "concise \"uo_out\" as uo_out\n";
-        puml += "concise \"uio_out\" as uio_out\n";
-        puml += "concise \"uio_oe\" as uio_oe\n\n";
+        if (showUiIn) puml += "concise \"ui_in\" as ui_in\n";
+        if (showUioIn) puml += "concise \"uio_in\" as uio_in\n";
+        if (showClk) puml += "binary \"clk\" as clk\n";
+        if (showRstN) puml += "binary \"rst_n\" as rst_n\n";
+        if (showEna) puml += "binary \"ena\" as ena\n";
+        if (showUoOut) puml += "concise \"uo_out\" as uo_out\n";
+        if (showUioOut) puml += "concise \"uio_out\" as uio_out\n";
+        if (showUioOe) puml += "concise \"uio_oe\" as uio_oe\n\n";
 
         let time = 0;
         historyData.forEach((t) => {
             puml += `@${time}\n`;
-            puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `clk is ${t.clk}\n`;
-            puml += `rst_n is ${t.rst_n}\n`;
-            puml += `ena is ${t.ena}\n`;
-            puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
-            puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            if (showUiIn) puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            if (showUioIn) puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            if (showClk) puml += `clk is ${t.clk}\n`;
+            if (showRstN) puml += `rst_n is ${t.rst_n}\n`;
+            if (showEna) puml += `ena is ${t.ena}\n`;
+            if (showUoOut) puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            if (showUioOut) puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            if (showUioOe) puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
             time++;
         });
 
@@ -279,47 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addHistoryRow(inputs, outputs, timestamp);
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
         updateDiagram();
-    }
-
-    function exportToCsv() {
-        if (historyData.length === 0) {
-            alert('No history to export');
-            return;
-        }
-
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
-        const csvRows = [headers.join(',')];
-
-        for (const row of historyData) {
-            const values = [
-                `"${row.time}"`,
-                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
-                row.clk,
-                row.rst_n,
-                row.ena,
-                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
-                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
-            ];
-            csvRows.push(values.join(','));
-        }
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'tiny_tapeout_history.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-
-        // Clean up
-        setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }, 100);
     }
 
     function exportToCsv() {
