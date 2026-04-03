@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const testerTable = document.querySelector('.tester-table');
     const connectBtn = document.getElementById('connectBtn');
     const statusLabel = document.getElementById('statusLabel');
+    const pmodEnable = document.getElementById('pmodEnable');
+    const pmodReset = document.getElementById('pmodReset');
+    const pmodStatus = document.getElementById('pmodStatus');
 
     let port = null;
     let reader = null;
@@ -160,6 +163,127 @@ document.addEventListener('DOMContentLoaded', () => {
         consoleDiv.textContent += `[${timestamp}] ${message}\n`;
         consoleDiv.scrollTop = consoleDiv.scrollHeight;
     }
+
+    class SPIEmulator {
+        constructor(id, memorySize, deviceId) {
+            this.id = id;
+            this.memorySize = memorySize;
+            this.memory = new Uint8Array(memorySize);
+            this.deviceId = deviceId;
+            this.reset();
+        }
+
+        reset() {
+            this.state = 'IDLE';
+            this.command = 0;
+            this.address = 0;
+            this.bitCount = 0;
+            this.byteBuffer = 0;
+            this.addressBytesReceived = 0;
+            this.dataByteIndex = 0;
+            this.writeEnabled = false;
+            this.miso = 0;
+            this.lastSck = 0;
+        }
+
+        processBit(sck, mosi) {
+            // Rising edge of SCK: Sample MOSI
+            if (this.lastSck === 0 && sck === 1) {
+                this.byteBuffer = (this.byteBuffer << 1) | (mosi & 1);
+                this.bitCount++;
+
+                if (this.bitCount === 8) {
+                    this.processByte(this.byteBuffer);
+                    this.byteBuffer = 0;
+                    this.bitCount = 0;
+                }
+            }
+            // Falling edge of SCK: Update MISO
+            else if (this.lastSck === 1 && sck === 0) {
+                if (this.state === 'READ_ID') {
+                    const idByte = this.deviceId[this.dataByteIndex % this.deviceId.length];
+                    this.miso = (idByte >> (7 - this.bitCount)) & 1;
+                } else if (this.state === 'READ_DATA') {
+                    const dataByte = this.memory[this.address % this.memorySize];
+                    this.miso = (dataByte >> (7 - this.bitCount)) & 1;
+                } else {
+                    this.miso = 0;
+                }
+            }
+            this.lastSck = sck;
+        }
+
+        processByte(byte) {
+            if (this.state === 'IDLE') {
+                this.command = byte;
+                this.dataByteIndex = 0;
+                if (byte === 0x9F) { // Read ID
+                    this.state = 'READ_ID';
+                    this.updateStatus(`[${this.id}] Read ID`);
+                } else if (byte === 0x03) { // Read Data
+                    this.state = 'ADDRESS';
+                    this.addressBytesReceived = 0;
+                    this.nextState = 'READ_DATA';
+                } else if (byte === 0x02) { // Page Program / Write
+                    this.state = 'ADDRESS';
+                    this.addressBytesReceived = 0;
+                    this.nextState = 'WRITE_DATA';
+                } else if (byte === 0x06) { // Write Enable
+                    this.writeEnabled = true;
+                    this.updateStatus(`[${this.id}] Write Enabled`);
+                } else if (byte === 0x04) { // Write Disable
+                    this.writeEnabled = false;
+                    this.updateStatus(`[${this.id}] Write Disabled`);
+                }
+            } else if (this.state === 'ADDRESS') {
+                this.address = (this.address << 8) | byte;
+                this.addressBytesReceived++;
+                if (this.addressBytesReceived === 3) {
+                    this.state = this.nextState;
+                    this.updateStatus(`[${this.id}] ${this.state} at 0x${this.address.toString(16).padStart(6, '0')}`);
+                }
+            } else if (this.state === 'READ_DATA') {
+                this.address++;
+                this.dataByteIndex++;
+            } else if (this.state === 'WRITE_DATA') {
+                if (this.writeEnabled) {
+                    this.memory[this.address % this.memorySize] = byte;
+                    this.address++;
+                    this.dataByteIndex++;
+                }
+            } else if (this.state === 'READ_ID') {
+                this.dataByteIndex++;
+            }
+        }
+
+        updateStatus(msg) {
+            pmodStatus.textContent = msg;
+            console.log(`PMOD Emulation: ${msg}`);
+        }
+    }
+
+    const flashEmu = new SPIEmulator('Flash', 1024 * 1024, [0xEF, 0x40, 0x18]); // W25Q128
+    const psramAEmu = new SPIEmulator('PSRAM A', 1024 * 1024, [0x0D, 0x5D]); // APS6404
+    const psramBEmu = new SPIEmulator('PSRAM B', 1024 * 1024, [0x0D, 0x5D]); // APS6404
+
+    pmodReset.addEventListener('click', () => {
+        flashEmu.reset();
+        psramAEmu.reset();
+        psramBEmu.reset();
+        pmodStatus.textContent = 'Memory Reset';
+        logToConsole('PMOD memory reset');
+    });
+
+    pmodEnable.addEventListener('change', () => {
+        if (!pmodEnable.checked) {
+            pmodStatus.textContent = 'PMOD Emulation is disabled.';
+            flashEmu.reset();
+            psramAEmu.reset();
+            psramBEmu.reset();
+        } else {
+            pmodStatus.textContent = 'PMOD Emulation is enabled.';
+        }
+    });
 
     function getBits(inputs) {
         let val = 0;
@@ -486,6 +610,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
         const timestamp = new Date().toLocaleTimeString();
+
+        // PMOD Emulation: Update MISO bit in uioInValue if enabled
+        if (pmodEnable.checked) {
+            const miso = (flashEmu.miso | psramAEmu.miso | psramBEmu.miso) & 1;
+            uioInValue = (uioInValue & ~0x04) | (miso << 2);
+
+            // Update UI checkbox for uio_in[2] (index is 7 - bit_position, so 7 - 2 = 5)
+            if (uioIn[5].checked !== !!miso) {
+                uioIn[5].checked = !!miso;
+                updateHexFromBits(uioIn, uioInHex);
+            }
+        }
+
         const inputs = {
             ui_in: uiValue,
             uio_in: uioInValue,
@@ -545,6 +682,27 @@ document.addEventListener('DOMContentLoaded', () => {
             ...inputs,
             ...outputs
         });
+
+        // PMOD Emulation: Update state machine
+        if (pmodEnable.checked) {
+            // Signal mapping (from outputs):
+            // uio[0]=CS0, uio[6]=CS1, uio[7]=CS2, uio[1]=MOSI, uio[3]=SCK
+            const uio = outputs.uio_out;
+            const cs0 = (uio >> 0) & 1;
+            const cs1 = (uio >> 6) & 1;
+            const cs2 = (uio >> 7) & 1;
+            const mosi = (uio >> 1) & 1;
+            const sck = (uio >> 3) & 1;
+
+            if (cs0 === 0) flashEmu.processBit(sck, mosi);
+            else flashEmu.reset();
+
+            if (cs1 === 0) psramAEmu.processBit(sck, mosi);
+            else psramAEmu.reset();
+
+            if (cs2 === 0) psramBEmu.processBit(sck, mosi);
+            else psramBEmu.reset();
+        }
 
         addHistoryRow(inputs, outputs, timestamp);
         if (!skipUpdate) updateDiagram();

@@ -297,6 +297,38 @@ button:hover {
     background-color: #5a6268;
 }
 
+.pmod-panel h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+.pmod-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+#pmodReset {
+    background-color: #6c757d;
+}
+
+#pmodReset:hover {
+    background-color: #5a6268;
+}
+
+.pmod-status {
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    border: 1px solid #eee;
+}
+
 .testset-info {
     padding: 10px;
     background-color: #f8f9fa;
