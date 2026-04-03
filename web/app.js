@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
+    const clearDataBtn = document.getElementById('clearData');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
     const historyData = [];
@@ -363,6 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     exportCsvBtn.addEventListener('click', exportToCsv);
+
+    clearDataBtn.addEventListener('click', () => {
+        historyData.length = 0;
+        historyBody.innerHTML = '';
+        consoleDiv.textContent = '';
+        logToConsole('History and console cleared');
+    });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
     logToConsole('Note: WebSerial functionality is TBD');
