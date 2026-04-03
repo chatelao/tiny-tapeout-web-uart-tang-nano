@@ -230,11 +230,11 @@ button:hover {
     margin-bottom: 12px;
 }
 
-#exportCsv {
+#exportCsv, #importCsv {
     background-color: #6c757d;
 }
 
-#exportCsv:hover {
+#exportCsv:hover, #importCsv:hover {
     background-color: #5a6268;
 }
 
