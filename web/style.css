@@ -14,6 +14,38 @@ body {
     max-width: 1400px;
 }
 
+.nav-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    gap: 10px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #65676b;
+    padding: 10px 20px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.nav-link:hover {
+    background-color: #e7f3ff;
+    color: #007bff;
+}
+
+.nav-link.active {
+    color: #007bff;
+    background-color: #fff;
+    border-color: #ddd;
+    margin-bottom: -1px;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+}
+
 h1 {
     text-align: center;
     color: #050505;
@@ -296,6 +328,26 @@ button:hover {
     color: #888;
     font-style: italic;
     font-size: 0.8rem;
+}
+
+.flasher-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.flasher-controls input[type="file"] {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 #history tr:nth-child(even) {
