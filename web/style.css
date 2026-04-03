@@ -289,6 +289,14 @@ button:hover {
     cursor: not-allowed;
 }
 
+#copyPermalink {
+    background-color: #6c757d;
+}
+
+#copyPermalink:hover {
+    background-color: #5a6268;
+}
+
 .testset-info {
     padding: 10px;
     background-color: #f8f9fa;
