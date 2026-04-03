@@ -305,6 +305,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
+    function exportToCsv() {
+        if (historyData.length === 0) {
+            alert('No history to export');
+            return;
+        }
+
+        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const csvRows = [headers.join(',')];
+
+        for (const row of historyData) {
+            const values = [
+                `"${row.time}"`,
+                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
+                row.clk,
+                row.rst_n,
+                row.ena,
+                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
+            ];
+            csvRows.push(values.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'tiny_tapeout_history.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
+
     sendReceiveBtn.addEventListener('click', () => {
         const uiValue = getBits(uiIn);
         const uioInValue = getBits(uioIn);
