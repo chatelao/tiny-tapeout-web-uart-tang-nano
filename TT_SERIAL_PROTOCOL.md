@@ -14,14 +14,6 @@ To perform a single transaction (update inputs and read outputs), the host sends
 
 ### Request Format
 
-Compact Format:
-- `[ui_in][uio_in][ctrl]\n` (6 hex chars)
-
-Where:
-- `ui_in` (2 hex chars): Input data for the `ui_in[7:0]` pins.
-- `uio_in` (2 hex chars): Input data for the `uio_in[7:0]` pins.
-- `ctrl` (2 hex chars): Control bits: bit 0 = `clk`, bit 1 = `rst_n`, bit 2 = `ena`.
-
 Long (verbose) Format, any element omitted is kept to the same value "as is":
 - `ui;[ui_in];uio;[uio_in];clk;[clk_in];rst_n;[rst_n_in];ena;[ena_in]\n`
 
