@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ena = document.getElementById('ena');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
+    const importCsvBtn = document.getElementById('importCsv');
+    const importCsvFile = document.getElementById('importCsvFile');
     const clearDataBtn = document.getElementById('clearData');
     const testsetSelect = document.getElementById('testsetSelect');
     const loadTestsetBtn = document.getElementById('loadTestset');
@@ -351,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+    function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
         const timestamp = new Date().toLocaleTimeString();
         const inputs = {
             ui_in: uiValue,
@@ -380,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addHistoryRow(inputs, outputs, timestamp);
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
-        updateDiagram();
+        if (!skipUpdate) updateDiagram();
     }
 
     function exportToCsv() {
@@ -440,7 +442,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    async function importFromCsv(file) {
+        try {
+            const text = await file.text();
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            if (lines.length < 2) return;
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const colMap = {};
+            ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena'].forEach(col => {
+                colMap[col] = headers.indexOf(col);
+            });
+
+            logToConsole(`Importing ${lines.length - 1} transactions from CSV...`);
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+
+                const parseVal = (val) => {
+                    if (val.startsWith('0x')) return parseInt(val.substring(2), 16);
+                    return parseInt(val, 10);
+                };
+
+                const uiInVal = colMap.ui_in !== -1 ? parseVal(values[colMap.ui_in]) : 0;
+                const uioInVal = colMap.uio_in !== -1 ? parseVal(values[colMap.uio_in]) : 0;
+                const clkVal = colMap.clk !== -1 ? parseVal(values[colMap.clk]) : 0;
+                const rstVal = colMap.rst_n !== -1 ? parseVal(values[colMap.rst_n]) : 1;
+                const enaVal = colMap.ena !== -1 ? parseVal(values[colMap.ena]) : 1;
+
+                performTransaction(uiInVal, uioInVal, clkVal, rstVal, enaVal, true);
+
+                // Yield to main thread every 10 rows
+                if (i % 10 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            updateDiagram();
+            logToConsole('CSV import complete');
+        } catch (e) {
+            console.error('Failed to import CSV', e);
+            logToConsole('Error importing CSV');
+        }
+    }
+
     exportCsvBtn.addEventListener('click', exportToCsv);
+
+    importCsvBtn.addEventListener('click', () => {
+        importCsvFile.click();
+    });
+
+    importCsvFile.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            importFromCsv(e.target.files[0]);
+            // Clear the value so the same file can be imported again
+            e.target.value = '';
+        }
+    });
 
     document.querySelectorAll('.diagram-type').forEach(select => {
         select.addEventListener('change', updateDiagram);
