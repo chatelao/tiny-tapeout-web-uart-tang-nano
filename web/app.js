@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 testerTable.classList.add(`hide-${col}`);
             }
+            updateDiagram();
         });
     });
     const historyData = [];
@@ -196,7 +197,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const channels = ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
         const config = {};
         channels.forEach(ch => {
-            config[ch] = document.getElementById(`type-${ch}`).value;
+            let type = document.getElementById(`type-${ch}`).value;
+            const toggle = document.getElementById(`toggle-${ch}`);
+            if (toggle && !toggle.checked) {
+                type = 'hidden';
+            }
+            config[ch] = type;
         });
 
         let puml = "@startuml\n";
