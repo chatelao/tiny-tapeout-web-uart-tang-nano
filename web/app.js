@@ -131,6 +131,43 @@ document.addEventListener('DOMContentLoaded', () => {
         historyBody.prepend(row);
     }
 
+    function formatFP8(val) {
+        // E4M3: 1 sign, 4 exponent, 3 mantissa, bias 7
+        const sign = (val >> 7) & 1;
+        const exponent = (val >> 3) & 0xF;
+        const mantissa = val & 0x7;
+
+        let result = 0;
+        if (exponent === 0) {
+            // Subnormal
+            result = (sign ? -1 : 1) * Math.pow(2, -6) * (mantissa / 8);
+        } else if (exponent === 0xF && mantissa === 0x7) {
+            // NaN (specific for E4M3 in some conventions)
+            return "NaN";
+        } else {
+            // Normal
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 7) * (1 + mantissa / 8);
+        }
+        return result.toFixed(3);
+    }
+
+    function formatFP4(val) {
+        // E2M1: 1 sign, 2 exponent, 1 mantissa, bias 1
+        const sign = (val >> 3) & 1;
+        const exponent = (val >> 1) & 0x3;
+        const mantissa = val & 1;
+
+        let result = 0;
+        if (exponent === 0) {
+            // Subnormal
+            result = (sign ? -1 : 1) * Math.pow(2, 0) * (mantissa / 2);
+        } else {
+            // Normal
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 1) * (1 + mantissa / 2);
+        }
+        return result.toFixed(2);
+    }
+
     function generatePlantUML() {
         if (historyData.length === 0) return "";
 
@@ -180,6 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     puml += `${ch} is "${val}"\n`;
                 } else if (type === 'bin') {
                     puml += `${ch} is "0b${val.toString(2).padStart(8, '0')}"\n`;
+                } else if (type === 'fp8') {
+                    puml += `${ch} is "${formatFP8(val)}"\n`;
+                } else if (type === 'dual_fp4') {
+                    const high = formatFP4((val >> 4) & 0xF);
+                    const low = formatFP4(val & 0xF);
+                    puml += `${ch} is "${high} | ${low}"\n`;
                 }
             });
             time++;
