@@ -27,12 +27,11 @@ jobs:
 
       - name: Build project
         run: |
-          make -C src CROSS_COMPILE=arm-none-eabi-
+          make -C src/src CROSS_COMPILE=arm-none-eabi- firmware.bin
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
-            src/firmware.bin
-            src/bitstream.fs
+            src/src/firmware.bin
