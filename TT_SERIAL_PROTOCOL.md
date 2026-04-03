@@ -40,10 +40,6 @@ Long Format only:
 
 ## Examples
 
-### Compact Format Transaction
-Host sends: `00FF07\n` (ui_in=0x00, uio_in=0xFF, clk=1, rst_n=1, ena=1)
-Device responds: `000000\n`
-
 ### Long Format Transaction
 Host sends: `ui;0x55;clk;1;rst_n;1;ena;1\n`
 Device responds: `uo;00;uio;00;uio_oe;00\n`
