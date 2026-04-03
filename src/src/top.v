@@ -9,39 +9,42 @@ module top (
     input  wire       btn2_pin             // Pin 15
 );
 
-    wire [15:0] m3_gpio;
+ // Deklaration der fehlenden Signale
+wire master_pclk;
+wire master_prst; // ACHTUNG: Prüfen ob Active High oder Low!
+wire [3:0] master_pstrb;
+wire [2:0] master_pprot;
+wire master_pslverr1;
 
-    wire [11:0] mst1_paddr;
-    wire        mst1_psel;
-    wire        mst1_penable;
-    wire        mst1_pwrite;
-    wire [31:0] mst1_pwdata;
-    wire [31:0] mst1_prdata;
-    wire        mst1_pready;
+assign master_pslverr1 = 1'b0; // Slave-Error auf OK festlegen
 
     Gowin_EMPU_Top m3_inst (
-		.sys_clk(clk_27m),     // input sys_clk
+        .sys_clk(clk_27m),
+        .gpio(m3_gpio),
+        .uart0_rxd(uart0_rxd),
+        .uart0_txd(uart0_txd),
+        .reset_n(btn2_pin), // Empfehlung: Synchronisierten Reset nutzen
 
-		.gpio(m3_gpio),        // inout [15:0] gpio
+        .master_pclk(master_pclk),
+        .master_prst(master_prst),
+        .master_pstrb(master_pstrb),
+        .master_pprot(master_pprot),
+        .master_pslverr1(master_pslverr1),
 
-		.uart0_rxd(uart0_rxd), // input  uart0_rxd
-		.uart0_txd(uart0_txd), // output uart0_txd
-
-		.reset_n(btn2_pin),
-
-        .APBTARGEXP1PSEL(mst1_psel),
-        .APBTARGEXP1PENABLE(mst1_penable),
-        .APBTARGEXP1PWRITE(mst1_pwrite),
-        .APBTARGEXP1PADDR(mst1_paddr),
-        .APBTARGEXP1PWDATA(mst1_pwdata),
-        .APBTARGEXP1PRDATA(mst1_prdata),
-        .APBTARGEXP1PREADY(mst1_pready)
+        .master_penable(mst1_penable),
+        .master_paddr(mst1_paddr), // Jetzt 12-bit
+        .master_pwrite(mst1_pwrite),
+        .master_pwdata(mst1_pwdata),
+        .master_psel1(mst1_psel),
+        .master_pready1(mst1_pready),
+        .master_prdata1(mst1_prdata)
     );
 
+/*
     tt_m3_wrapper tt_wrapper_inst (
-        .PCLK(clk_27m),
-        .PRESETn(btn2_pin),
-        .PADDR(mst1_paddr[7:0]),
+        .PCLK(master_pclk),      // Korrekt: Synchron zum APB-Master
+        .PRESETn(~master_prst),  // Falls master_prst active high ist
+        .PADDR(mst1_paddr),      // Breite im Wrapper anpassen!
         .PSEL(mst1_psel),
         .PENABLE(mst1_penable),
         .PWRITE(mst1_pwrite),
@@ -49,7 +52,7 @@ module top (
         .PRDATA(mst1_prdata),
         .PREADY(mst1_pready)
     );
-
+*/
     assign led_pin = btn1_pin ^ btn2_pin ^ uart0_txd;
 
 endmodule
