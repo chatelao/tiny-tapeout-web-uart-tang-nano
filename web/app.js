@@ -499,10 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let outputs;
 
         if (isConnected) {
-            const ctrl = (clkVal & 1) | ((rstVal & 1) << 1) | ((enaVal & 1) << 2);
-            const command = uiValue.toString(16).padStart(2, '0') +
-                            uioInValue.toString(16).padStart(2, '0') +
-                            ctrl.toString(16).padStart(2, '0') + '\n';
+            const command = `0x${uiValue.toString(16).padStart(2, '0')};${clkVal};0x${uioInValue.toString(16).padStart(2, '0')};${rstVal};${enaVal}\n`;
 
             const encoder = new TextEncoder();
             const promise = new Promise(resolve => {
