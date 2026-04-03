@@ -131,6 +131,107 @@ document.addEventListener('DOMContentLoaded', () => {
         historyBody.prepend(row);
     }
 
+    function generatePlantUML() {
+        if (historyData.length === 0) return "";
+
+        let puml = "@startuml\n";
+        puml += "concise \"ui_in\" as ui_in\n";
+        puml += "concise \"uio_in\" as uio_in\n";
+        puml += "binary \"clk\" as clk\n";
+        puml += "binary \"rst_n\" as rst_n\n";
+        puml += "binary \"ena\" as ena\n";
+        puml += "concise \"uo_out\" as uo_out\n";
+        puml += "concise \"uio_out\" as uio_out\n";
+        puml += "concise \"uio_oe\" as uio_oe\n\n";
+
+        let time = 0;
+        historyData.forEach((t) => {
+            puml += `@${time}\n`;
+            puml += `ui_in is "0x${t.ui_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `uio_in is "0x${t.uio_in.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `clk is ${t.clk}\n`;
+            puml += `rst_n is ${t.rst_n}\n`;
+            puml += `ena is ${t.ena}\n`;
+            puml += `uo_out is "0x${t.uo_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `uio_out is "0x${t.uio_out.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            puml += `uio_oe is "0x${t.uio_oe.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+            time++;
+        });
+
+        puml += `@${time}\n`;
+        puml += "@enduml";
+        return puml;
+    }
+
+    async function encodePlantUML(text) {
+        // UTF-8 to Uint8Array
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text);
+
+        // Deflate
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(data);
+        writer.close();
+
+        const response = new Response(cs.readable);
+        const compressed = new Uint8Array(await response.arrayBuffer());
+
+        // The PlantUML standard deflate requires skipping the first 2 bytes (zlib header)
+        // and last 4 bytes (checksum) if using raw deflate.
+        // However, CompressionStream 'deflate' provides zlib format.
+        // PlantUML server usually expects the deflate data WITHOUT the zlib header/checksum
+        // OR it uses a specific implementation.
+        // Let's try the common JS implementation approach:
+
+        return encode64(compressed);
+    }
+
+    function encode64(data) {
+        let r = "";
+        for (let i = 0; i < data.length; i += 3) {
+            if (i + 2 < data.length) {
+                r += append3bytes(data[i], data[i + 1], data[i + 2]);
+            } else if (i + 1 < data.length) {
+                r += append3bytes(data[i], data[i + 1], 0);
+            } else {
+                r += append3bytes(data[i], 0, 0);
+            }
+        }
+        return r;
+    }
+
+    function append3bytes(b1, b2, b3) {
+        const c1 = b1 >> 2;
+        const c2 = ((b1 & 0x3) << 4) | (b2 >> 4);
+        const c3 = ((b2 & 0xF) << 2) | (b3 >> 6);
+        const c4 = b3 & 0x3F;
+        let r = "";
+        r += encode6bit(c1 & 0x3F);
+        r += encode6bit(c2 & 0x3F);
+        r += encode6bit(c3 & 0x3F);
+        r += encode6bit(c4 & 0x3F);
+        return r;
+    }
+
+    function encode6bit(b) {
+        const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";
+        return alphabet[b] || '?';
+    }
+
+    async function updateDiagram() {
+        const puml = generatePlantUML();
+        if (!puml) return;
+
+        try {
+            const encoded = await encodePlantUML(puml);
+            const diagramImg = document.getElementById('diagram-img');
+            diagramImg.src = `https://www.plantuml.com/plantuml/img/${encoded}`;
+        } catch (e) {
+            console.error("Failed to update diagram", e);
+        }
+    }
+
     function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         const timestamp = new Date().toLocaleTimeString();
         const inputs = {
@@ -160,6 +261,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addHistoryRow(inputs, outputs, timestamp);
         logToConsole(`Received (Emulated): uo_out=0x${result.toString(16).padStart(2, '0')}`);
+        updateDiagram();
+    }
+
+    function exportToCsv() {
+        if (historyData.length === 0) {
+            alert('No history to export');
+            return;
+        }
+
+        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const csvRows = [headers.join(',')];
+
+        for (const row of historyData) {
+            const values = [
+                `"${row.time}"`,
+                `0x${row.ui_in.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_in.toString(16).padStart(2, '0')}`,
+                row.clk,
+                row.rst_n,
+                row.ena,
+                `0x${row.uo_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_out.toString(16).padStart(2, '0')}`,
+                `0x${row.uio_oe.toString(16).padStart(2, '0')}`
+            ];
+            csvRows.push(values.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'tiny_tapeout_history.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
     }
 
     function exportToCsv() {

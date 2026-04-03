@@ -220,3 +220,25 @@ button:hover {
 #history tr:hover {
     background-color: #f1f1f1;
 }
+
+.diagram-panel h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+#diagram-container {
+    overflow-x: auto;
+    text-align: center;
+    padding: 10px;
+    background: #fff;
+    min-height: 100px;
+    display: flex;
+    justify-content: center;
+}
+
+#diagram-img {
+    max-height: 500px;
+    max-width: none; /* Allow horizontal expansion */
+}
