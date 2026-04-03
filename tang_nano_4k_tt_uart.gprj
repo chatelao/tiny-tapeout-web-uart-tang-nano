@@ -5,14 +5,14 @@
     <Version>5</Version>
     <Device name="GW1NSR-4C" pn="GW1NSR-LV4CQN48PC6/I5">gw1nsr4c-000</Device>
     <FileList>
-        <File path="src/src/gowin_empu/gowin_empu.v" type="file.verilog" enable="1"/>
-        <File path="src/src/top.v" type="file.verilog" enable="1"/>
-        <File path="src/src/tt_project.v" type="file.verilog" enable="1"/>
-        <File path="src/src/tt_wrapper.v" type="file.verilog" enable="1"/>
-        <File path="src/src/top.cst" type="file.cst" enable="1"/>
-        <File path="src/src/m3.ld" type="file.other" enable="1"/>
-        <File path="src/src/m3_regs.h" type="file.other" enable="1"/>
-        <File path="src/src/main.c" type="file.other" enable="1"/>
-        <File path="src/src/startup.c" type="file.other" enable="1"/>
+        <File path="src/gowin_empu/gowin_empu.v" type="file.verilog" enable="1"/>
+        <File path="src/top.v" type="file.verilog" enable="1"/>
+        <File path="src/tt_project.v" type="file.verilog" enable="1"/>
+        <File path="src/tt_wrapper.v" type="file.verilog" enable="1"/>
+        <File path="src/top.cst" type="file.cst" enable="1"/>
+        <File path="src/m3.ld" type="file.other" enable="1"/>
+        <File path="src/m3_regs.h" type="file.other" enable="1"/>
+        <File path="src/main.c" type="file.other" enable="1"/>
+        <File path="src/startup.c" type="file.other" enable="1"/>
     </FileList>
 </Project>
