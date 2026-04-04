@@ -78,8 +78,8 @@ void process_line(char *line) {
 
     if (strchr(line, ';')) {
         // Semi-colon separated (Long or Short format)
-        char *line_copy = strdup(line);
-        char *token = strtok(line_copy, ";");
+        // Note: strtok modifies the line in place, which is fine here
+        char *token = strtok(line, ";");
         int index = 0;
         while (token != NULL) {
             if (strcmp(token, "ui") == 0) {
@@ -111,7 +111,6 @@ void process_line(char *line) {
             }
             token = strtok(NULL, ";");
         }
-        free(line_copy);
         perform_transaction();
     } else if (strlen(line) == 6) {
         // Compact 6-char hex format: [ui][uio][ctrl]

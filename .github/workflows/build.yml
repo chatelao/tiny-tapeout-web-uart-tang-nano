@@ -35,6 +35,7 @@ jobs:
           name: build-artifacts
           path: |
             src/src/firmware.bin
+            src/src/firmware.elf
 
   test:
     needs: build
