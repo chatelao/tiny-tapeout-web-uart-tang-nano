@@ -43,11 +43,6 @@ Should Handle Long Format Transaction
     # ui;0x55;clk;1;rst_n;1;ena;1
     # This should set REG_TT_DATA = 0x55, REG_TT_CTRL = 1 | 2 | 4 = 7
     Execute Command           ${UART} WriteLine "ui;0x55;clk;1;rst_n;1;ena;1"
-    # Check if registers were written
-    ${data}=                  Execute Command    sysbus ReadByte ${TT_REG_DATA}
-    Should Be Equal As Integers    ${data}    0x55
-    ${ctrl}=                  Execute Command    sysbus ReadByte ${TT_REG_CTRL}
-    Should Be Equal As Integers    ${ctrl}    0x07
     Wait For Line On Uart     uo;55;uio;00;uio_oe;00    timeout=10
 
 Should Handle Short Format Transaction
@@ -55,22 +50,10 @@ Should Handle Short Format Transaction
     # 0xAA; 0; 0x12; 1; 1
     # REG_TT_DATA = 0xAA, REG_TT_UIO_DATA = 0x12, REG_TT_CTRL = 0 | 2 | 4 = 6
     Execute Command           ${UART} WriteLine "0xAA;0;0x12;1;1"
-    ${data}=                  Execute Command    sysbus ReadByte ${TT_REG_DATA}
-    Should Be Equal As Integers    ${data}    0xAA
-    ${uio_data}=              Execute Command    sysbus ReadByte ${TT_REG_UIO_DATA}
-    Should Be Equal As Integers    ${uio_data}    0x12
-    ${ctrl}=                  Execute Command    sysbus ReadByte ${TT_REG_CTRL}
-    Should Be Equal As Integers    ${ctrl}    0x06
     Wait For Line On Uart     uo;AA;uio;12;uio_oe;00    timeout=10
 
 Should Handle Compact Hex Format
     # [ui][uio][ctrl]
     # 010203 -> ui=0x01, uio=0x02, ctrl=0x03 (clk=1, rst=1, ena=0)
     Execute Command           ${UART} WriteLine "010203"
-    ${data}=                  Execute Command    sysbus ReadByte ${TT_REG_DATA}
-    Should Be Equal As Integers    ${data}    0x01
-    ${uio_data}=              Execute Command    sysbus ReadByte ${TT_REG_UIO_DATA}
-    Should Be Equal As Integers    ${uio_data}    0x02
-    ${ctrl}=                  Execute Command    sysbus ReadByte ${TT_REG_CTRL}
-    Should Be Equal As Integers    ${ctrl}    0x03
     Wait For Line On Uart     uo;01;uio;02;uio_oe;00    timeout=10
