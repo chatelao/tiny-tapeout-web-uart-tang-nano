@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const testerTable = document.querySelector('.tester-table');
     const connectBtn = document.getElementById('connectBtn');
     const statusLabel = document.getElementById('statusLabel');
+    const useTinyWasm = document.getElementById('useTinyWasm');
 
     let port = null;
     let reader = null;
@@ -466,14 +467,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
-        // Emulate behavior: uo_out = ui_in ^ uio_in (XOR)
-        const result = (uiValue ^ uioInValue) & 0xFF;
-        return {
-            uo_out: result,
-            uio_out: 0,
-            uio_oe: 0
+    let digitalTwin = null;
+    let wasmReady = false;
+
+    // The WASM module initialized by digital_twin_Tiny.js
+    if (typeof Module !== 'undefined') {
+        Module['onRuntimeInitialized'] = () => {
+            logToConsole('Tiny FP8 WASM Module initialized');
+            digitalTwin = new Module.DigitalTwin();
+            wasmReady = true;
         };
+    }
+
+    function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
+        if (useTinyWasm.checked && wasmReady && digitalTwin) {
+            digitalTwin.set_ui_in(uiValue);
+            digitalTwin.set_uio_in(uioInValue);
+            digitalTwin.set_ena(enaVal === 1);
+            digitalTwin.set_rst_n(rstVal === 1);
+
+            // Only advance the simulation on a logical rising edge in the UI
+            if (clkVal === 1) {
+                digitalTwin.step();
+            }
+
+            return {
+                uo_out: digitalTwin.get_uo_out(),
+                uio_out: digitalTwin.get_uio_out(),
+                uio_oe: digitalTwin.get_uio_oe()
+            };
+        } else {
+            // Emulate behavior: uo_out = ui_in ^ uio_in (XOR)
+            const result = (uiValue ^ uioInValue) & 0xFF;
+            return {
+                uo_out: result,
+                uio_out: 0,
+                uio_oe: 0
+            };
+        }
     }
 
     let serialDataPromiseResolve = null;
