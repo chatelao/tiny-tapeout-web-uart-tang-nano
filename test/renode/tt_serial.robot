@@ -1,7 +1,7 @@
 *** Settings ***
 Suite Setup                   Setup
 Suite Teardown                Teardown
-Test Setup                    Reset Machine
+Test Setup                    Prepare Test
 Test Teardown                 Test Teardown
 Resource                      ${RENODEKEYWORDS}
 
@@ -13,17 +13,9 @@ ${TT_REG_UIO_OE}              0x40002408
 ${TT_REG_CTRL}                0x4000240C
 
 *** Keywords ***
-Setup
-    Execute Command           mach create
-    Execute Command           machine LoadPlatformDescription @test/renode/m3.repl
-    Execute Command           sysbus LoadBinary @src/src/firmware.bin 0x0
-    Execute Command           cpu VectorTableOffset 0x0
-
-Reset Machine
-    Execute Command           machine Reset
-    Execute Command           sysbus LoadBinary @src/src/firmware.bin 0x0
-    Execute Command           cpu VectorTableOffset 0x0
-    # Enable UART echoing to robot
+Prepare Test
+    Reset Emulation
+    Execute Command           include @test/renode/m3.resc
     Create Terminal Tester    ${UART}
 
 *** Test Cases ***
