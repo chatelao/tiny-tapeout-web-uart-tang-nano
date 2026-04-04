@@ -16,7 +16,11 @@ The CI workflow was pinned to `ubuntu-22.04` for the testing job, where `gtk-sha
 When the Renode Monitor command `include @m3.resc` is executed from within a Robot Framework test, Renode evaluates the path relative to the **current working directory** (the repository root), not the location of the `.robot` file. This caused the "File does not exist: m3.resc" error.
 
 ### Solution
-The Robot Framework variable `${CURDIR}` is now used to provide an absolute path to the script: `include @${CURDIR}/m3.resc`. This ensures the script is found regardless of where the test runner is started.
+The Robot Framework variable `${CURDIR}` is used to provide an absolute path to the script. However, Renode's `@` operator inside the included script still evaluates relative to the **current working directory**, not the script's location.
+
+To solve this, we now:
+1. Define a Renode variable `$CONF_DIR` in the Robot file using `${CURDIR}`.
+2. Use `$CONF_DIR` within `m3.resc` to load `m3.repl` and `firmware.bin` using absolute paths.
 
 ## 3. Linker and Heap Issues
 
