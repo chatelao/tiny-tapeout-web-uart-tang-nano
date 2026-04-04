@@ -45,7 +45,7 @@ Boundary(board, "Tang Nano 4K Board") {
 
 Rel(user, browser, "Interacts with")
 Rel(browser, bridge, "WebSerial / WebUSB", "USB-C")
-Rel(bridge, uart0, "UART", "Pins 18/19")
+Rel(bridge, uart0, "UART", "Pins 44/46")
 Rel(bridge, int_flash, "JTAG/SWD", "Firmware")
 Rel(bridge, cfg_flash, "JTAG", "Bitstream")
 
