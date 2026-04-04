@@ -2,7 +2,7 @@
 uart0: UART.CMSDK_APB_UART @ sysbus 0x40004000
 
 tt_registers: Memory.MappedMemory @ sysbus 0x40002400
-    size: 0x10
+    size: 0x400
 
 nvic: IRQControllers.NVIC @ sysbus 0xE000E000
     priorityMask: 0xFF

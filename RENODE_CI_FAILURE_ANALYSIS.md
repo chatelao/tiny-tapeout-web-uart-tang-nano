@@ -37,3 +37,11 @@ Raw binaries loaded with `sysbus LoadBinary` in Renode do not automatically set 
 
 ### Solution
 The Renode simulation script (`m3.resc`) was updated to explicitly read the first two words of the vector table (at 0x0 and 0x4) and initialize the CPU's SP and PC registers accordingly.
+
+## 5. Peripheral Memory Alignment
+
+### Problem
+Renode's memory registration (specifically in `tlib`) requires peripheral sizes to be aligned to the guest page size, which is 0x400 (1024 bytes) for ARM targets. Defining a 16-byte register block caused a registration error (`Error E39`).
+
+### Solution
+The `tt_registers` peripheral in `m3.repl` was updated with a size of `0x400` to satisfy the alignment requirement while providing sufficient space for the 16 bytes of TT registers.
