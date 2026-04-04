@@ -4,7 +4,7 @@
  * This wrapper connects a standard TT module to the M3 APB2 expansion bus (Slot 1).
  *
  * Register Map (Base: 0x40002400):
- *   0x00: DATA    (W: ui_in, R: uo_out)
+ *   0x00: DATA     (W: ui_in, R: uo_out)
  *   0x04: UIO_DATA (W: uio_in, R: uio_out)
  *   0x08: UIO_OE   (R: uio_oe)
  *   0x0C: CTRL     (W/R: [0]=clk, [1]=rst_n, [2]=ena)

@@ -14,6 +14,24 @@
     "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/gowin_empu/gowin_empu.v",
     "ModuleLine" : 9,
     "ModuleName" : "Gowin_EMPU_Top"
+   },
+   {
+    "InstFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/top.v",
+    "InstLine" : 47,
+    "InstName" : "tt_wrapper_inst",
+    "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_wrapper.v",
+    "ModuleLine" : 15,
+    "ModuleName" : "tt_m3_wrapper",
+    "SubInsts" : [
+     {
+      "InstFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_wrapper.v",
+      "InstLine" : 87,
+      "InstName" : "tt_inst",
+      "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_project.v",
+      "ModuleLine" : 9,
+      "ModuleName" : "tt_um_minimal_echo"
+     }
+    ]
    }
   ]
  }

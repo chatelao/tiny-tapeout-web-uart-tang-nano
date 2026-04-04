@@ -1,2 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Module name="top" Register="15" Lut="62" Bsram="8" T_Register="15(15)" T_Lut="62(62)" T_Bsram="8(8)"/>
+<Module name="top" Register="15" Lut="63" Bsram="8" T_Register="16(15)" T_Lut="65(63)" T_Bsram="8(8)">
+ <SubModule name="tt_wrapper_inst" Register="1" Lut="2" T_Register="1(1)" T_Lut="2(2)"/>
+</Module>

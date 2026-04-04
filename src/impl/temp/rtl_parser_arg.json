@@ -8,6 +8,14 @@
   {
    "Path" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/top.v",
    "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_project.v",
+   "Type" : "verilog"
+  },
+  {
+   "Path" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_wrapper.v",
+   "Type" : "verilog"
   }
  ],
  "IncludePath" : [
