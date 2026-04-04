@@ -20,7 +20,6 @@ Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
         Component(tt_wrapper, "TT APB2 Wrapper", "Register-mapped", "0x40002400")
         Component(tt_module, "TT Module", "tt_um_minimal_echo", "Tiny Tapeout Project")
 
-        Rel(m3, tt_wrapper, "APB2 Expansion")
         Rel(tt_wrapper, tt_module, "ui_in[7:0], uio_in[7:0]\nclk, rst_n, ena")
         Rel(tt_module, tt_wrapper, "uo_out[7:0], uio_out[7:0]\nuio_oe[7:0]")
     }
@@ -32,7 +31,8 @@ Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
 
     Rel(m3, int_flash, "I-Code/D-Code")
     Rel(m3, int_sram, "System Bus")
-    Rel(m3, uart0, "APB")
+    Rel(m3, uart0, "APB1")
+    Rel(m3, tt_wrapper, "APB2")
     Rel(cfg_flash, fabric, "Configures")
 }
 
