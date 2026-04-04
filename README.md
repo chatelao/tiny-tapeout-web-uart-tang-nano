@@ -64,8 +64,8 @@ The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 periphera
 
 | Signal | FPGA Pin | Description |
 | :--- | :--- | :--- |
-| **UART0 RX** | 44 (IOB13B) | Receive data input |
-| **UART0 TX** | 46 (IOB13A) | Transmit data output |
+| **UART0 TX** | 44 (IOB13B) | Transmit data output |
+| **UART0 RX** | 46 (IOB13A) | Receive data input |
 
 ## Pinout Tang Nano 4K
 
