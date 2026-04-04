@@ -20,11 +20,6 @@ jobs:
         with:
           release: '10.3-2021.10'
 
-      - name: Install OSS CAD Suite
-        uses: YosysHQ/setup-oss-cad-suite@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build project
         run: |
           make -C src/src CROSS_COMPILE=arm-none-eabi- firmware.bin
