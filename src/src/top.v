@@ -1,4 +1,4 @@
-</* top.v - m3_uart_echo */
+/* top.v - m3_uart_echo */
 module top (
     input  wire       clk_27m,
     output wire       uart0_txd,    // Pin 44

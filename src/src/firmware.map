@@ -563,53 +563,53 @@ LOAD /usr/lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtn.o
  .boot          0x00000040       0x58 startup.o
                 0x00000040                Reset_Handler
 
-.text           0x00000098      0x200
+.text           0x00000098      0x1e4
                 0x00000098                        . = ALIGN (0x4)
  *(.text*)
- .text.startup  0x00000098       0x70 main.o
+ .text.startup  0x00000098       0x54 main.o
                 0x00000098                main
- .text          0x00000108        0x4 startup.o
-                0x00000108                Default_Handler
- .text          0x0000010c       0xa0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
-                0x0000010c                memset
- .text          0x000001ac       0xec /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
-                0x000001ac                memcpy
+ .text          0x000000ec        0x4 startup.o
+                0x000000ec                Default_Handler
+ .text          0x000000f0       0xa0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+                0x000000f0                memset
+ .text          0x00000190       0xec /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+                0x00000190                memcpy
  *(.rodata*)
-                0x00000298                        _etext = .
+                0x0000027c                        _etext = .
 
-.glue_7         0x00000298        0x0
- .glue_7        0x00000298        0x0 linker stubs
+.glue_7         0x0000027c        0x0
+ .glue_7        0x0000027c        0x0 linker stubs
 
-.glue_7t        0x00000298        0x0
- .glue_7t       0x00000298        0x0 linker stubs
+.glue_7t        0x0000027c        0x0
+ .glue_7t       0x0000027c        0x0 linker stubs
 
-.vfp11_veneer   0x00000298        0x0
- .vfp11_veneer  0x00000298        0x0 linker stubs
+.vfp11_veneer   0x0000027c        0x0
+ .vfp11_veneer  0x0000027c        0x0 linker stubs
 
-.v4_bx          0x00000298        0x0
- .v4_bx         0x00000298        0x0 linker stubs
+.v4_bx          0x0000027c        0x0
+ .v4_bx         0x0000027c        0x0 linker stubs
 
-.init           0x00000298        0x4
- .init          0x00000298        0x4 /usr/lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crti.o
-                0x00000298                _init
+.init           0x0000027c        0x4
+ .init          0x0000027c        0x4 /usr/lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crti.o
+                0x0000027c                _init
 
-.fini           0x0000029c        0x4
- .fini          0x0000029c        0x4 /usr/lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crti.o
-                0x0000029c                _fini
+.fini           0x00000280        0x4
+ .fini          0x00000280        0x4 /usr/lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crti.o
+                0x00000280                _fini
 
-.iplt           0x000002a0        0x0
- .iplt          0x000002a0        0x0 startup.o
+.iplt           0x00000284        0x0
+ .iplt          0x00000284        0x0 startup.o
 
-.rel.dyn        0x000002a0        0x0
- .rel.iplt      0x000002a0        0x0 startup.o
+.rel.dyn        0x00000284        0x0
+ .rel.iplt      0x00000284        0x0 startup.o
 
-.ARM.exidx      0x000002a0        0x8
- .ARM.exidx     0x000002a0        0x8 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+.ARM.exidx      0x00000284        0x8
+ .ARM.exidx     0x00000284        0x8 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
 
 .gnu.sgstubs
  *(.gnu.sgstubs*)
 
-.data           0x20000000        0x0 load address 0x00000298
+.data           0x20000000        0x0 load address 0x0000027c
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _sdata = .
  *(.data*)
@@ -660,24 +660,24 @@ LOAD linker stubs
  .comment       0x0000004c        0x0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
                                  0x27 (size before relaxing)
 
-.debug_info     0x00000000      0x3bd
- .debug_info    0x00000000       0xca main.o
- .debug_info    0x000000ca      0x18b startup.o
- .debug_info    0x00000255      0x135 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
- .debug_info    0x0000038a       0x33 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+.debug_info     0x00000000      0x3a9
+ .debug_info    0x00000000       0xb6 main.o
+ .debug_info    0x000000b6      0x18b startup.o
+ .debug_info    0x00000241      0x135 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+ .debug_info    0x00000376       0x33 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
 
-.debug_abbrev   0x00000000      0x28a
- .debug_abbrev  0x00000000       0x86 main.o
- .debug_abbrev  0x00000086      0x125 startup.o
- .debug_abbrev  0x000001ab       0xb7 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
- .debug_abbrev  0x00000262       0x28 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+.debug_abbrev   0x00000000      0x276
+ .debug_abbrev  0x00000000       0x72 main.o
+ .debug_abbrev  0x00000072      0x125 startup.o
+ .debug_abbrev  0x00000197       0xb7 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+ .debug_abbrev  0x0000024e       0x28 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
 
 .debug_loclists
-                0x00000000      0x206
+                0x00000000      0x20a
  .debug_loclists
-                0x00000000       0x2f main.o
+                0x00000000       0x33 main.o
  .debug_loclists
-                0x0000002f      0x1d7 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+                0x00000033      0x1d7 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
 
 .debug_aranges  0x00000000       0x88
  .debug_aranges
@@ -696,27 +696,27 @@ LOAD linker stubs
  .debug_rnglists
                 0x00000013       0x19 startup.o
 
-.debug_line     0x00000000      0x422
- .debug_line    0x00000000       0xf2 main.o
- .debug_line    0x000000f2       0xbe startup.o
- .debug_line    0x000001b0      0x1b5 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
- .debug_line    0x00000365       0xbd /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+.debug_line     0x00000000      0x41c
+ .debug_line    0x00000000       0xec main.o
+ .debug_line    0x000000ec       0xbe startup.o
+ .debug_line    0x000001aa      0x1b5 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+ .debug_line    0x0000035f       0xbd /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
 
-.debug_str      0x00000000      0x31f
- .debug_str     0x00000000      0x31f main.o
-                                0x16e (size before relaxing)
- .debug_str     0x0000031f        0x0 startup.o
+.debug_str      0x00000000      0x318
+ .debug_str     0x00000000      0x318 main.o
+                                0x167 (size before relaxing)
+ .debug_str     0x00000318        0x0 startup.o
                                 0x1e9 (size before relaxing)
- .debug_str     0x0000031f        0x0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+ .debug_str     0x00000318        0x0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
                                 0x1a9 (size before relaxing)
- .debug_str     0x0000031f        0x0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+ .debug_str     0x00000318        0x0 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
                                  0xaf (size before relaxing)
 
-.debug_frame    0x00000000       0xac
- .debug_frame   0x00000000       0x28 main.o
- .debug_frame   0x00000028       0x30 startup.o
- .debug_frame   0x00000058       0x2c /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
- .debug_frame   0x00000084       0x28 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
+.debug_frame    0x00000000       0xa4
+ .debug_frame   0x00000000       0x20 main.o
+ .debug_frame   0x00000020       0x30 startup.o
+ .debug_frame   0x00000050       0x2c /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memset.o)
+ .debug_frame   0x0000007c       0x28 /usr/lib/gcc/arm-none-eabi/14.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libg_nano.a(libc_a-memcpy.o)
 
 .debug_line_str
                 0x00000000       0x99

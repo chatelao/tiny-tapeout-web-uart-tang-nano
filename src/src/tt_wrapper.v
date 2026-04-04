@@ -34,18 +34,6 @@ module tt_m3_wrapper (
     output wire        debug_rst_n
 );
 
-    assign PREADY = 1'b1;
-
-    // Debug assignments
-    assign debug_ui_in   = ui_in;
-    assign debug_uo_out  = uo_out;
-    assign debug_uio_in  = uio_in;
-    assign debug_uio_out = uio_out;
-    assign debug_uio_oe  = uio_oe;
-    assign debug_ena     = ctrl[2];
-    assign debug_clk     = ctrl[0];
-    assign debug_rst_n   = ctrl[1];
-
     // Registers (W)
     reg  [7:0] ui_in;   // Input to TT module
     reg  [7:0] uio_in;  // Input (path) to TT module
@@ -56,31 +44,7 @@ module tt_m3_wrapper (
     wire [7:0] uio_out; // Output (path) from TT module
     wire [7:0] uio_oe;  // Output Enable from TT module
 
-    // --- APB Write Logic ---
-    always @(posedge PCLK or negedge PRESETn) begin
-        if (!PRESETn) begin
-            ui_in   <= 8'h0;
-            uio_in  <= 8'h0;
-            ctrl    <= 3'h0; // Reset active (rst_n=0), Ena=0, Clk=0
-        end else if (PSEL && PENABLE && PWRITE) begin
-            case (PADDR[3:0])
-                4'h0: ui_in  <= PWDATA[7:0];
-                4'h4: uio_in <= PWDATA[7:0];
-                4'hC: ctrl   <= PWDATA[2:0];
-            endcase
-        end
-    end
 
-    // --- APB Read Logic ---
-    always @(*) begin
-        case (PADDR[3:0])
-            4'h0:    PRDATA = {24'h0, uo_out};
-            4'h4:    PRDATA = {24'h0, uio_out};
-            4'h8:    PRDATA = {24'h0, uio_oe};
-            4'hC:    PRDATA = {29'h0, ctrl};
-            default: PRDATA = 32'h0;
-        endcase
-    end
 
     // --- Tiny Tapeout Module Instantiation ---
     // Note: Change 'tt_um_minimal_echo' to your actual TT module name
@@ -94,5 +58,66 @@ module tt_m3_wrapper (
         .clk    (ctrl[0]),
         .rst_n  (ctrl[1])
     );
+
+    // 
+    // APB2 read/write interface to the Tiny-Tapout module
+    // 
+
+    assign PREADY = 1'b1;
+
+    // This block triggers on:
+    // - PCLK:    The rising edge
+    // - PRESETn: The falling edge
+    always @(posedge PCLK or negedge PRESETn) begin
+        if (!PRESETn) begin
+            // Reset State: Clear all input registers and control bits when PRESETn is low (0)
+            ui_in   <= 8'h0;   // Set 8-bit user inputs to zero
+            uio_in  <= 8'h0;   // Set 8-bit bidirectional inputs to zero
+            ctrl    <= 3'h0;   // Reset control bits (typically Reset_n, Enable, Clock)
+
+        // Write Condition:
+        // - PSEL    : Peripheral is selected
+        // - PENABLE : The cycle is active (enabled)
+        // - PWRITE  : The master wants to write
+        end else if (PSEL && PENABLE && PWRITE) begin
+            case (PADDR[3:0]) // Look at the last 4 bits
+                4'h0: ui_in  <= PWDATA[7:0];  // Address 0x0
+                4'h4: uio_in <= PWDATA[7:0];  // Address 0x4
+                4'hC: ctrl   <= PWDATA[2:0];  // Address 0xC
+            endcase
+        end
+    end
+
+    // --- APB Read Logic ---
+    // This is a combinational block (*) that updates whenever the address or output signals change
+    always @(*) begin
+        case (PADDR[3:0]) // Decide which internal signal to "mirror" back to the bus based on the address
+
+            // Address 0x0: Read 'uo_out'
+            4'h0:    PRDATA = {24'h0, uo_out};  
+            
+            // Address 0x4: Read 'uio_out'
+            4'h4:    PRDATA = {24'h0, uio_out}; 
+            
+            // Address 0x8: Read 'uio_oe'
+            4'h8:    PRDATA = {24'h0, uio_oe};  
+            
+            // Address 0xC: Read 'ctrl'
+            4'hC:    PRDATA = {29'h0, ctrl};
+            
+            // Safety: If the address doesn't match any of the above, return 0
+            default: PRDATA = 32'h0;            
+        endcase
+    end
+
+    // Debug assignments
+    assign debug_ui_in   = ui_in;
+    assign debug_uo_out  = uo_out;
+    assign debug_uio_in  = uio_in;
+    assign debug_uio_out = uio_out;
+    assign debug_uio_oe  = uio_oe;
+    assign debug_ena     = ctrl[2];
+    assign debug_clk     = ctrl[0];
+    assign debug_rst_n   = ctrl[1];
 
 endmodule

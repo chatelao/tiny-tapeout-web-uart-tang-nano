@@ -25,7 +25,7 @@
     "SubInsts" : [
      {
       "InstFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_wrapper.v",
-      "InstLine" : 87,
+      "InstLine" : 51,
       "InstName" : "tt_inst",
       "ModuleFile" : "C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/tt_project.v",
       "ModuleLine" : 9,
