@@ -145,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const historyData = [];
     let currentTestset = null;
+    let cycleCount = 0;
 
     function updateURLParameter(projectName) {
         const url = new URL(window.location.href);
@@ -224,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return container;
     }
 
-    function addHistoryRow(inputs, outputs, timestamp) {
+    function addHistoryRow(inputs, outputs, timestamp, cycle) {
         const row = document.createElement('tr');
 
         // Time
@@ -232,6 +233,12 @@ document.addEventListener('DOMContentLoaded', () => {
         timeTd.className = 'time-cell';
         timeTd.textContent = timestamp;
         row.appendChild(timeTd);
+
+        // Cycle
+        const cycleTd = document.createElement('td');
+        cycleTd.className = 'time-cell';
+        cycleTd.textContent = cycle;
+        row.appendChild(cycleTd);
 
         // ui_in
         const uiInTd = document.createElement('td');
@@ -311,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function generatePlantUML() {
         if (historyData.length === 0) return "";
 
-        const channels = ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const channels = ['cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
         const config = {};
         channels.forEach(ch => {
             let type = document.getElementById(`type-${ch}`).value;
@@ -374,7 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (type === 'binary') {
                             puml += `${ch} is ${val}\n`;
                         } else if (type === 'hex') {
-                            puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                            if (ch === 'cycle') {
+                                puml += `${ch} is "0x${val.toString(16).toUpperCase()}"\n`;
+                            } else {
+                                puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                            }
                         } else if (type === 'dec') {
                             puml += `${ch} is "${val}"\n`;
                         } else if (type === 'bin') {
@@ -512,6 +523,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
         const timestamp = new Date().toLocaleTimeString();
+
+        if (rstVal === 0) {
+            cycleCount = 0;
+        } else if (clkVal === 1) {
+            cycleCount++;
+        }
+
         const inputs = {
             ui_in: uiValue,
             uio_in: uioInValue,
@@ -565,11 +583,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         historyData.push({
             time: timestamp,
+            cycle: cycleCount,
             ...inputs,
             ...outputs
         });
 
-        addHistoryRow(inputs, outputs, timestamp);
+        addHistoryRow(inputs, outputs, timestamp, cycleCount);
         if (!skipUpdate) updateDiagram();
     }
 
@@ -579,12 +598,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const headers = ['Time', 'Cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
         const csvRows = [headers.join(',')];
 
         for (const row of historyData) {
             const values = [
                 `"${row.time}"`,
+                row.cycle,
                 `0x${row.ui_in.toString(16).padStart(2, '0')}`,
                 `0x${row.uio_in.toString(16).padStart(2, '0')}`,
                 row.clk,
@@ -714,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearDataBtn.addEventListener('click', () => {
         historyData.length = 0;
+        cycleCount = 0;
         historyBody.innerHTML = '';
         consoleDiv.textContent = '';
         logToConsole('History and console cleared');

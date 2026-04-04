@@ -29,6 +29,7 @@
                 <thead>
                     <tr>
                         <th>Time</th>
+                        <th>Cycle</th>
                         <th>ui_in [7:0]</th>
                         <th class="col-uio_in">
                             <input type="checkbox" id="toggle-uio_in" checked title="Toggle uio_in visibility">
@@ -50,6 +51,7 @@
                 </thead>
                 <tbody class="input-section">
                     <tr class="input-row">
+                        <td class="time-cell">-</td>
                         <td class="time-cell">-</td>
                         <td>
                             <div class="bits-container">
@@ -126,6 +128,14 @@
         <div class="panel diagram-panel">
             <h2>Timing Diagram</h2>
             <div class="diagram-controls">
+                <div class="control-group">
+                    <label for="type-cycle">cycle:</label>
+                    <select id="type-cycle" class="diagram-type">
+                        <option value="dec" selected>Dec</option>
+                        <option value="hex">Hex</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
                 <div class="control-group">
                     <label for="type-ui_in">ui_in:</label>
                     <select id="type-ui_in" class="diagram-type">
