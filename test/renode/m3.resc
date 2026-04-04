@@ -1,6 +1,11 @@
 mach create
 machine LoadPlatformDescription $CONF_DIR/m3.repl
 
+# Enable detailed logging
+logLevel 1
+sysbus LogPeripheralAccess uart0
+sysbus LogPeripheralAccess tt_registers
+
 macro reset
 """
     sysbus LoadBinary $CONF_DIR/../../src/src/firmware.bin 0x0

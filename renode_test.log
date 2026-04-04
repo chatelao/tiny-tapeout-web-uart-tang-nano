@@ -1,0 +1,12 @@
+
+(Renode:193669): Gdk-CRITICAL **: 16:11:46.410: gdk_keymap_get_for_display: assertion 'GDK_IS_DISPLAY (display)' failed
+16:11:46.4249 [WARNING] Couldn't start UI - falling back to console mode
+16:11:47.2305 [INFO] Loaded monitor commands from: /opt/renode/scripts/monitor.py
+[0mRenode, version 1.16.1 (d66b0c2a-202602160923)
+
+[31;1m(monitor) [0mmach create;  machine LoadPlatformDescription @test/renode/m3.repl;  sysbus LogPeripheralAccess uart0;  sysbus LoadBinary @src/src/firmware.bin 0x0;  quit
+16:11:47.3291 [INFO] System bus created.
+16:11:48.6936 [INFO] uart0: Logging is already enabled
+16:11:48.7193 [INFO] sysbus: Loading block of 1024 bytes length at 0x0.
+[;032mR[0m[;032me[0m[;032mn[0m[;032mo[0m[;032md[0m[;032me[0m[;032m [0m[;032mi[0m[;032ms[0m[;032m [0m[;032mq[0m[;032mu[0m[;032mi[0m[;032mt[0m[;032mt[0m[;032mi[0m[;032mn[0m[;032mg[0m[;032m[0m[;032m
+[0m[;032m[0m[0m[0m16:11:48.7905 [INFO] machine-0: Disposed.

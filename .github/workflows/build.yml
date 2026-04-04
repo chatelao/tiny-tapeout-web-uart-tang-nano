@@ -49,3 +49,4 @@ jobs:
         uses: antmicro/renode-test-action@v4
         with:
           tests-to-run: test/renode/tt_serial.robot
+          renode-arguments: --show-log

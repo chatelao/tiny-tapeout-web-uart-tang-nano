@@ -19,6 +19,19 @@ Prepare Test
     Execute Command           include @${CURDIR}/m3.resc
     Create Terminal Tester    ${UART}
 
+Test Teardown
+    Run Keyword If Test Failed    Log System State
+
+Log System State
+    ${pc}=                    Execute Command    cpu PC
+    Log                       PC: ${pc}
+    ${sp}=                    Execute Command    cpu SP
+    Log                       SP: ${sp}
+    ${data}=                  Execute Command    sysbus ReadByte ${TT_REG_DATA}
+    Log                       TT_DATA: ${data}
+    ${ctrl}=                  Execute Command    sysbus ReadByte ${TT_REG_CTRL}
+    Log                       TT_CTRL: ${ctrl}
+
 *** Test Cases ***
 Should Handle Reset Command
     Write Line To Uart        reset
