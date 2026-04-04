@@ -30,3 +30,22 @@ jobs:
           name: build-artifacts
           path: |
             src/src/firmware.bin
+            src/src/firmware.elf
+
+  test:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: src/src
+
+      - name: Run Renode tests
+        uses: antmicro/renode-test-action@v4
+        with:
+          tests-to-run: test/renode/tt_serial.robot

@@ -1,0 +1,14 @@
+mach create
+machine LoadPlatformDescription $CONF_DIR/m3.repl
+
+macro reset
+"""
+    sysbus LoadBinary $CONF_DIR/../../src/src/firmware.bin 0x0
+    cpu VectorTableOffset 0x0
+    # Set Stack Pointer (SP) from the first word of the vector table
+    cpu SP `sysbus ReadDoubleWord 0x0`
+    # Set Program Counter (PC) from the second word of the vector table
+    cpu PC `sysbus ReadDoubleWord 0x4`
+"""
+
+runMacro $reset
