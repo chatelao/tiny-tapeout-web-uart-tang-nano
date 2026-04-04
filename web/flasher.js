@@ -1,4 +1,4 @@
-import { runOpenFPGALoader as openFPGALoader } from 'https://cdn.jsdelivr.net/npm/@yowasp/openfpgaloader/gen/bundle.js';
+import { runOpenFPGALoader as openFPGALoader } from 'https://cdn.jsdelivr.net/npm/@yowasp/openfpgaloader@1.1.1-18.211/gen/bundle.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('bitstreamInput');
