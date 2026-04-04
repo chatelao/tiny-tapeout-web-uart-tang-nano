@@ -15,7 +15,7 @@ ${TT_REG_CTRL}                0x4000240C
 *** Keywords ***
 Prepare Test
     Reset Emulation
-    Execute Command           include @test/renode/m3.resc
+    Execute Command           include @m3.resc
     Create Terminal Tester    ${UART}
 
 *** Test Cases ***
