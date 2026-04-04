@@ -33,7 +33,7 @@ def run_test():
                                 // Simulate response after a short delay
                                 if (text === 'reset\\n') {
                                     window.postMessage({ type: 'serial-rx', data: 'ok\\n' }, '*');
-                                } else if (text.length === 7) { // 6 hex + \n
+                                } else if (text.includes(';')) {
                                     // Respond with uo;01;uio;02;uio_oe;03\n
                                     window.postMessage({ type: 'serial-rx', data: 'uo;01;uio;02;uio_oe;03\\n' }, '*');
                                 }
@@ -113,10 +113,17 @@ def run_test():
             expect(page.locator("#connectBtn")).to_have_text("Connect")
             expect(page.locator("#statusLabel")).to_have_text("Simulation Mode")
 
-            # 5. Perform a Send in Simulation mode
-            print("Clicking Send in simulation mode...")
+            # 5. Perform a Send in Simulation mode (XOR test)
+            print("Clicking Send in simulation mode (XOR test)...")
+            # Set ui_in to 0x55 and uio_in to 0xAA
+            page.fill("#ui_in_hex", "55")
+            page.press("#ui_in_hex", "Enter")
+            page.fill("#uio_in_hex", "AA")
+            page.press("#uio_in_hex", "Enter")
+
             page.click("#sendReceive")
-            expect(page.locator("#console")).to_contain_text("Received (Emulated): uo_out=0x10", timeout=5000)
+            # 0x55 ^ 0xAA = 0xFF
+            expect(page.locator("#console")).to_contain_text("Received (Emulated): uo_out=0xFF", timeout=5000)
 
             print("WebSerial functionality test passed!")
             browser.close()
