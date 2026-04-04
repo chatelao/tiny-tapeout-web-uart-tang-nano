@@ -56,6 +56,7 @@ For detailed information on the Web Serial API features utilized in this project
 | `ROADMAP.md` | Progress tracking and future steps | Planned |
 | `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Present |
 | `TOOLCHAIN_SETUP.md` | Instructions for setting up the toolchains | Planned |
+| `WASM_INTEGRATION.md` | Documentation for the WASM simulation interface | Present |
 
 ## UART Configuration
 The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 peripheral.
