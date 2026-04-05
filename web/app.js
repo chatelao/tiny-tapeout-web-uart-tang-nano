@@ -27,6 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusLabel = document.getElementById('statusLabel');
     const useFullWasm = document.getElementById('useFullWasm');
 
+    // Initialize Use Full WASM from localStorage
+    const savedWasmPreference = localStorage.getItem('useFullWasm');
+    if (savedWasmPreference !== null) {
+        useFullWasm.checked = savedWasmPreference === 'true';
+    }
+
+    useFullWasm.addEventListener('change', () => {
+        localStorage.setItem('useFullWasm', useFullWasm.checked);
+        logToConsole(`Use Full FP8 WASM: ${useFullWasm.checked}`);
+    });
+
     let port = null;
     let reader = null;
     let writer = null;
@@ -481,14 +492,37 @@ document.addEventListener('DOMContentLoaded', () => {
     let digitalTwin = null;
     let wasmReady = false;
 
+    function initDigitalTwin() {
+        if (typeof Module !== 'undefined' && Module.DigitalTwin && !wasmReady) {
+            try {
+                digitalTwin = new Module.DigitalTwin();
+                wasmReady = true;
+                logToConsole('Full FP8 WASM Module initialized and DigitalTwin created');
+                return true;
+            } catch (e) {
+                console.error('Failed to create DigitalTwin', e);
+            }
+        }
+        return false;
+    }
+
     // The WASM module initialized by digital_twin_Full.js
     if (typeof Module !== 'undefined') {
-        Module['onRuntimeInitialized'] = () => {
-            logToConsole('Full FP8 WASM Module initialized');
-            digitalTwin = new Module.DigitalTwin();
-            wasmReady = true;
-        };
+        if (!initDigitalTwin()) {
+            Module['onRuntimeInitialized'] = () => {
+                initDigitalTwin();
+            };
+        }
     }
+
+    // Fallback check for WASM readiness
+    const wasmCheckInterval = setInterval(() => {
+        if (wasmReady) {
+            clearInterval(wasmCheckInterval);
+        } else {
+            initDigitalTwin();
+        }
+    }, 500);
 
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         if (useFullWasm.checked && wasmReady && digitalTwin) {
@@ -737,6 +771,22 @@ document.addEventListener('DOMContentLoaded', () => {
         cycleCount = 0;
         historyBody.innerHTML = '';
         consoleDiv.textContent = '';
+
+        // Reset WASM DigitalTwin state if available
+        if (digitalTwin) {
+            try {
+                // Perform a hard reset in simulation
+                digitalTwin.set_rst_n(false);
+                digitalTwin.step();
+                digitalTwin.step();
+                digitalTwin.set_rst_n(true);
+                digitalTwin.step();
+                logToConsole('Simulation state reset');
+            } catch (e) {
+                console.error('Failed to reset DigitalTwin', e);
+            }
+        }
+
         logToConsole('History and console cleared');
     });
 
