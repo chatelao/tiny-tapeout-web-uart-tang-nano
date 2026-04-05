@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const testerTable = document.querySelector('.tester-table');
     const connectBtn = document.getElementById('connectBtn');
     const statusLabel = document.getElementById('statusLabel');
-    const useTinyWasm = document.getElementById('useTinyWasm');
+    const useFullWasm = document.getElementById('useFullWasm');
 
     let port = null;
     let reader = null;
@@ -481,17 +481,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let digitalTwin = null;
     let wasmReady = false;
 
-    // The WASM module initialized by digital_twin_Tiny.js
+    // The WASM module initialized by digital_twin_Full.js
     if (typeof Module !== 'undefined') {
         Module['onRuntimeInitialized'] = () => {
-            logToConsole('Tiny FP8 WASM Module initialized');
+            logToConsole('Full FP8 WASM Module initialized');
             digitalTwin = new Module.DigitalTwin();
             wasmReady = true;
         };
     }
 
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
-        if (useTinyWasm.checked && wasmReady && digitalTwin) {
+        if (useFullWasm.checked && wasmReady && digitalTwin) {
             digitalTwin.set_ui_in(uiValue);
             digitalTwin.set_uio_in(uioInValue);
             digitalTwin.set_ena(enaVal === 1);
