@@ -61,13 +61,6 @@ For detailed information on the Web Serial API features utilized in this project
 ## UART Configuration
 The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 peripheral.
 
-### Hardware Wiring
-
-| Signal | FPGA Pin | Description |
-| :--- | :--- | :--- |
-| **UART0 TX** | 44 (IOB13B) | Transmit data output |
-| **UART0 RX** | 46 (IOB13A) | Receive data input |
-
 ## Pinout Tang Nano 4K
 
 <img width="720" height="517" alt="image" src="https://github.com/user-attachments/assets/47908f11-3643-4ec7-9593-debdb9dc6cd9" />
