@@ -25,9 +25,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const testerTable = document.querySelector('.tester-table');
     const connectBtn = document.getElementById('connectBtn');
     const statusLabel = document.getElementById('statusLabel');
+
     const pmodEnable = document.getElementById('pmodEnable');
     const pmodReset = document.getElementById('pmodReset');
     const pmodStatus = document.getElementById('pmodStatus');
+
+    const useFullWasm = document.getElementById('useFullWasm');
+
+    // Initialize Use Full WASM from localStorage
+    const savedWasmPreference = localStorage.getItem('useFullWasm');
+    if (savedWasmPreference !== null) {
+        useFullWasm.checked = savedWasmPreference === 'true';
+    }
+
+    useFullWasm.addEventListener('change', () => {
+        localStorage.setItem('useFullWasm', useFullWasm.checked);
+        logToConsole(`Use Full FP8 WASM: ${useFullWasm.checked}`);
+    });
 
     let port = null;
     let reader = null;
@@ -147,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const historyData = [];
     let currentTestset = null;
+    let cycleCount = 0;
 
     function updateURLParameter(projectName) {
         const url = new URL(window.location.href);
@@ -347,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return container;
     }
 
-    function addHistoryRow(inputs, outputs, timestamp) {
+    function addHistoryRow(inputs, outputs, timestamp, cycle) {
         const row = document.createElement('tr');
 
         // Time
@@ -355,6 +370,12 @@ document.addEventListener('DOMContentLoaded', () => {
         timeTd.className = 'time-cell';
         timeTd.textContent = timestamp;
         row.appendChild(timeTd);
+
+        // Cycle
+        const cycleTd = document.createElement('td');
+        cycleTd.className = 'time-cell';
+        cycleTd.textContent = cycle;
+        row.appendChild(cycleTd);
 
         // ui_in
         const uiInTd = document.createElement('td');
@@ -390,11 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uioOeTd.className = 'col-uio_oe';
         uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
         row.appendChild(uioOeTd);
-
-        // Action placeholder
-        const actionTd = document.createElement('td');
-        actionTd.textContent = '-';
-        row.appendChild(actionTd);
 
         historyBody.prepend(row);
     }
@@ -439,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function generatePlantUML() {
         if (historyData.length === 0) return "";
 
-        const channels = ['ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const channels = ['cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
         const config = {};
         channels.forEach(ch => {
             let type = document.getElementById(`type-${ch}`).value;
@@ -502,7 +518,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (type === 'binary') {
                             puml += `${ch} is ${val}\n`;
                         } else if (type === 'hex') {
-                            puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                            if (ch === 'cycle') {
+                                puml += `${ch} is "0x${val.toString(16).toUpperCase()}"\n`;
+                            } else {
+                                puml += `${ch} is "0x${val.toString(16).toUpperCase().padStart(2, '0')}"\n`;
+                            }
                         } else if (type === 'dec') {
                             puml += `${ch} is "${val}"\n`;
                         } else if (type === 'bin') {
@@ -595,14 +615,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let digitalTwin = null;
+    let wasmReady = false;
+
+    function initDigitalTwin() {
+        if (typeof Module !== 'undefined' && Module.DigitalTwin && !wasmReady) {
+            try {
+                digitalTwin = new Module.DigitalTwin();
+                wasmReady = true;
+                logToConsole('Full FP8 WASM Module initialized and DigitalTwin created');
+                return true;
+            } catch (e) {
+                console.error('Failed to create DigitalTwin', e);
+            }
+        }
+        return false;
+    }
+
+    // The WASM module initialized by digital_twin_Full.js
+    if (typeof Module !== 'undefined') {
+        if (!initDigitalTwin()) {
+            Module['onRuntimeInitialized'] = () => {
+                initDigitalTwin();
+            };
+        }
+    }
+
+    // Fallback check for WASM readiness
+    const wasmCheckInterval = setInterval(() => {
+        if (wasmReady) {
+            clearInterval(wasmCheckInterval);
+        } else {
+            initDigitalTwin();
+        }
+    }, 500);
+
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
-        // Emulate behavior: Summing ui_in and uio_in
-        const result = (uiValue + uioInValue) & 0xFF;
-        return {
-            uo_out: result,
-            uio_out: 0,
-            uio_oe: 0
-        };
+        if (useFullWasm.checked && wasmReady && digitalTwin) {
+            digitalTwin.set_ui_in(uiValue);
+            digitalTwin.set_uio_in(uioInValue);
+            digitalTwin.set_ena(enaVal === 1);
+            digitalTwin.set_rst_n(rstVal === 1);
+
+            // Only advance the simulation on a logical rising edge in the UI
+            if (clkVal === 1) {
+                digitalTwin.step();
+            }
+
+            return {
+                uo_out: digitalTwin.get_uo_out(),
+                uio_out: digitalTwin.get_uio_out(),
+                uio_oe: digitalTwin.get_uio_oe()
+            };
+        } else {
+            // Emulate behavior: uo_out = ui_in ^ uio_in (XOR)
+            const result = (uiValue ^ uioInValue) & 0xFF;
+            return {
+                uo_out: result,
+                uio_out: 0,
+                uio_oe: 0
+            };
+        }
     }
 
     let serialDataPromiseResolve = null;
@@ -620,7 +693,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (uioIn[5].checked !== !!miso) {
                 uioIn[5].checked = !!miso;
                 updateHexFromBits(uioIn, uioInHex);
-            }
+        }
+
+        if (rstVal === 0) {
+            cycleCount = 0;
+        } else if (clkVal === 1) {
+            cycleCount++;
         }
 
         const inputs = {
@@ -631,15 +709,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ena: enaVal
         };
 
-        logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0')}, uio_in=0x${uioInValue.toString(16).padStart(2, '0')}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
+        logToConsole(`Sending: ui_in=0x${uiValue.toString(16).padStart(2, '0').toUpperCase()}, uio_in=0x${uioInValue.toString(16).padStart(2, '0').toUpperCase()}, clk=${clkVal}, rst_n=${rstVal}, ena=${enaVal}`);
 
         let outputs;
 
         if (isConnected) {
-            const ctrl = (clkVal & 1) | ((rstVal & 1) << 1) | ((enaVal & 1) << 2);
-            const command = uiValue.toString(16).padStart(2, '0') +
-                            uioInValue.toString(16).padStart(2, '0') +
-                            ctrl.toString(16).padStart(2, '0') + '\n';
+            const command = `0x${uiValue.toString(16).padStart(2, '0')};${clkVal};0x${uioInValue.toString(16).padStart(2, '0')};${rstVal};${enaVal}\n`;
 
             const encoder = new TextEncoder();
             const promise = new Promise(resolve => {
@@ -667,18 +742,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     uio_out: parts[3] ? parseInt(parts[3], 16) : 0,
                     uio_oe: parts[5] ? parseInt(parts[5], 16) : 0
                 };
-                logToConsole(`Received (Serial): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0')}`);
+                logToConsole(`Received (Serial): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
             } else {
                 logToConsole('Error: Serial transaction timed out');
                 outputs = { uo_out: 0, uio_out: 0, uio_oe: 0 };
             }
         } else {
             outputs = mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal);
-            logToConsole(`Received (Emulated): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0')}`);
+            logToConsole(`Received (Emulated): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
         }
 
         historyData.push({
             time: timestamp,
+            cycle: cycleCount,
             ...inputs,
             ...outputs
         });
@@ -704,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else psramBEmu.reset();
         }
 
-        addHistoryRow(inputs, outputs, timestamp);
+        addHistoryRow(inputs, outputs, timestamp, cycleCount);
         if (!skipUpdate) updateDiagram();
     }
 
@@ -714,12 +790,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const headers = ['Time', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+        const headers = ['Time', 'Cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
         const csvRows = [headers.join(',')];
 
         for (const row of historyData) {
             const values = [
                 `"${row.time}"`,
+                row.cycle,
                 `0x${row.ui_in.toString(16).padStart(2, '0')}`,
                 `0x${row.uio_in.toString(16).padStart(2, '0')}`,
                 row.clk,
@@ -849,8 +926,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearDataBtn.addEventListener('click', () => {
         historyData.length = 0;
+        cycleCount = 0;
         historyBody.innerHTML = '';
         consoleDiv.textContent = '';
+
+        // Reset WASM DigitalTwin state if available
+        if (digitalTwin) {
+            try {
+                // Perform a hard reset in simulation
+                digitalTwin.set_rst_n(false);
+                digitalTwin.step();
+                digitalTwin.step();
+                digitalTwin.set_rst_n(true);
+                digitalTwin.step();
+                logToConsole('Simulation state reset');
+            } catch (e) {
+                console.error('Failed to reset DigitalTwin', e);
+            }
+        }
+
         logToConsole('History and console cleared');
     });
 

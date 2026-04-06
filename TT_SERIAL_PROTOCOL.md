@@ -14,14 +14,6 @@ To perform a single transaction (update inputs and read outputs), the host sends
 
 ### Request Format
 
-Compact Format:
-- `[ui_in][uio_in][ctrl]\n` (6 hex chars)
-
-Where:
-- `ui_in` (2 hex chars): Input data for the `ui_in[7:0]` pins.
-- `uio_in` (2 hex chars): Input data for the `uio_in[7:0]` pins.
-- `ctrl` (2 hex chars): Control bits: bit 0 = `clk`, bit 1 = `rst_n`, bit 2 = `ena`.
-
 Long (verbose) Format, any element omitted is kept to the same value "as is":
 - `ui;[ui_in];uio;[uio_in];clk;[clk_in];rst_n;[rst_n_in];ena;[ena_in]\n`
 
@@ -35,25 +27,18 @@ Values:
 
 ### Response Format
 
-Compact Format (used for compact requests):
-- `[uo_out][uio_out][uio_oe]\n` (6 hex chars)
-
-Long Format (used for verbose/short requests):
+Long Format only:
 - `uo;[uo_out];uio;[uio_out];uio_oe;[uio_oe]\n`
 
-- `uo_out` (2 hex chars): Output data from the `uo_out[7:0]` pins.
-- `uio_out` (2 hex chars): Output data from the `uio_out[7:0]` pins.
-- `uio_oe` (2 hex chars): Output enable signals from the `uio_oe[7:0]` pins.
+- `uo_out`  (0x + 2 hex chars): Output data from the `uo_out[7:0]` pins.
+- `uio_out` (0x + 2 hex chars): Output data from the `uio_out[7:0]` pins.
+- `uio_oe`  (0x + 2 hex chars): Output enable signals from the `uio_oe[7:0]` pins.
 
 ## Special Commands
 
 - `reset\n`: Resets the protocol state or the device. Returns `ok\n`.
 
 ## Examples
-
-### Compact Format Transaction
-Host sends: `00FF07\n` (ui_in=0x00, uio_in=0xFF, clk=1, rst_n=1, ena=1)
-Device responds: `000000\n`
 
 ### Long Format Transaction
 Host sends: `ui;0x55;clk;1;rst_n;1;ena;1\n`

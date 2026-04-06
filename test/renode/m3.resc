@@ -1,0 +1,15 @@
+mach create
+machine LoadPlatformDescription $CONF_DIR/m3.repl
+
+# Enable detailed logging
+logLevel 2
+cpu LogFunctionNames true
+logLevel 1 tt_registers
+sysbus LogPeripheralAccess tt_registers
+
+macro reset
+"""
+    sysbus LoadELF $CONF_DIR/../../src/src/firmware.elf
+"""
+
+runMacro $reset

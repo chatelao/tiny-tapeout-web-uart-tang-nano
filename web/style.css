@@ -347,7 +347,7 @@ button:hover {
     gap: 15px;
 }
 
-#statusLabel {
+#statusLabel, .status-label {
     font-size: 0.9rem;
     color: #65676b;
     font-weight: bold;
@@ -466,4 +466,79 @@ button:disabled {
 #diagram-img.more-details {
     max-height: 500px;
     max-width: none; /* Allow horizontal expansion */
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container-fluid {
+        width: 100%;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .nav-tabs {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+        border-bottom: none;
+    }
+
+    .nav-link {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .nav-link.active {
+        margin-bottom: 0;
+    }
+
+    .panel {
+        padding: 15px;
+    }
+
+    .table-actions, .testset-actions, .flasher-controls, .serial-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .table-actions button, .testset-actions button, .testset-actions select, .flasher-controls button, .serial-controls button {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .bits-container {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .tester-table {
+        font-size: 0.8rem;
+    }
+
+    .tester-table th, .tester-table td {
+        padding: 4px;
+    }
+
+    .diagram-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .control-group select {
+        width: 100%;
+    }
 }

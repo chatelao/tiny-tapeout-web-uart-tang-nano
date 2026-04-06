@@ -47,7 +47,7 @@ Running technical mapping ...
 [75%] Tech-Mapping Phase 2 completed
 [80%] Tech-Mapping Phase 3 completed
 [90%] Tech-Mapping Phase 4 completed
-[95%] Generate netlist file "C:\Users\chatelain\Dropbox\Privat-2026\2026-03-31_MicroPython-On-TangNano4k\micropython-tang-nano\micropython-tang-nano\examples\m3_baremetal\m3_uart_echo\src\gowin_empu\temp\gw_empu\gowin_empu.vg" completed
-Generate template file "C:\Users\chatelain\Dropbox\Privat-2026\2026-03-31_MicroPython-On-TangNano4k\micropython-tang-nano\micropython-tang-nano\examples\m3_baremetal\m3_uart_echo\src\gowin_empu\temp\gw_empu\gowin_empu_tmp.v" completed
-[100%] Generate report file "C:\Users\chatelain\Dropbox\Privat-2026\2026-03-31_MicroPython-On-TangNano4k\micropython-tang-nano\micropython-tang-nano\examples\m3_baremetal\m3_uart_echo\src\gowin_empu\temp\gw_empu\gowin_empu_syn.rpt.html" completed
+[95%] Generate netlist file "C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\gowin_empu\temp\gw_empu\gowin_empu.vg" completed
+Generate template file "C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\gowin_empu\temp\gw_empu\gowin_empu_tmp.v" completed
+[100%] Generate report file "C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\gowin_empu\temp\gw_empu\gowin_empu_syn.rpt.html" completed
 GowinSynthesis finish

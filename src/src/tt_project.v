@@ -18,7 +18,8 @@ module tt_um_minimal_echo (
 );
 
     // Assign inputs directly to outputs
-    assign uo_out  = ui_in;
+    assign uo_out  = ui_in ^ uio_in;
+    // assign uio_out = ! uio_in;
 
     // Set UIO to output and show b'10101100
     assign uio_out = 8'b10101100;

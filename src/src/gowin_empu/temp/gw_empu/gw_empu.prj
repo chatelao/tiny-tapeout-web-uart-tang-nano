@@ -10,7 +10,7 @@
     <OptionList>
         <Option type="disable_insert_pad" value="1"/>
         <Option type="include_path" value="C:/GowinEDU/Gowin_V1.9.11.03_Education_x64/IDE/ipcore/gowin_empu_gw1ns4/data"/>
-        <Option type="include_path" value="C:/Users/chatelain/Dropbox/Privat-2026/2026-03-31_MicroPython-On-TangNano4k/micropython-tang-nano/micropython-tang-nano/examples/m3_baremetal/m3_uart_echo/src/gowin_empu/temp/gw_empu"/>
+        <Option type="include_path" value="C:/Users/chatelain/Dropbox/Privat-2026/2026-04-03_TT-On-TangNano4k/tiny-tapeout-web-uart-tang-nano/src/src/gowin_empu/temp/gw_empu"/>
         <Option type="output_file" value="gowin_empu.vg"/>
         <Option type="output_template" value="gowin_empu_tmp.v"/>
         <Option type="ram_balance" value="1"/>

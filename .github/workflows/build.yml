@@ -20,11 +20,6 @@ jobs:
         with:
           release: '10.3-2021.10'
 
-      - name: Install OSS CAD Suite
-        uses: YosysHQ/setup-oss-cad-suite@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build project
         run: |
           make -C src/src CROSS_COMPILE=arm-none-eabi- firmware.bin
@@ -35,3 +30,23 @@ jobs:
           name: build-artifacts
           path: |
             src/src/firmware.bin
+            src/src/firmware.elf
+
+  test:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: src/src
+
+      - name: Run Renode tests
+        uses: antmicro/renode-test-action@v4
+        with:
+          tests-to-run: test/renode/tt_serial.robot
+          renode-arguments: --show-log

@@ -21,12 +21,15 @@
                 <button id="exportCsv">Export CSV</button>
                 <button id="importCsv">Import CSV</button>
                 <input type="file" id="importCsvFile" accept=".csv" style="display: none;">
+                <button id="sendReceive">Send</button>
                 <button id="clearData">Reset</button>
             </div>
+            <div class="table-responsive">
             <table class="tester-table">
                 <thead>
                     <tr>
                         <th>Time</th>
+                        <th>Cycle</th>
                         <th>ui_in [7:0]</th>
                         <th class="col-uio_in">
                             <input type="checkbox" id="toggle-uio_in" checked title="Toggle uio_in visibility">
@@ -44,11 +47,11 @@
                             <input type="checkbox" id="toggle-uio_oe" checked title="Toggle uio_oe visibility">
                             uio_oe [7:0]
                         </th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody class="input-section">
                     <tr class="input-row">
+                        <td class="time-cell">-</td>
                         <td class="time-cell">-</td>
                         <td>
                             <div class="bits-container">
@@ -86,18 +89,19 @@
                         <td class="results-placeholder">Ready to send...</td>
                         <td class="col-uio_out results-placeholder"></td>
                         <td class="col-uio_oe results-placeholder"></td>
-                        <td>
-                            <button id="sendReceive">Send</button>
-                        </td>
                     </tr>
                 </tbody>
                 <tbody id="history">
                     <!-- History rows will be prepended here -->
                 </tbody>
             </table>
+            </div>
             <div class="serial-controls">
                 <button id="connectBtn">Connect</button>
                 <span id="statusLabel">Simulation Mode</span>
+                <label class="wasm-toggle">
+                    <input type="checkbox" id="useFullWasm"> Use Full FP8 WASM
+                </label>
             </div>
         </div>
 
@@ -137,6 +141,14 @@
         <div class="panel diagram-panel">
             <h2>Timing Diagram</h2>
             <div class="diagram-controls">
+                <div class="control-group">
+                    <label for="type-cycle">cycle:</label>
+                    <select id="type-cycle" class="diagram-type">
+                        <option value="dec" selected>Dec</option>
+                        <option value="hex">Hex</option>
+                        <option value="hidden">Hidden</option>
+                    </select>
+                </div>
                 <div class="control-group">
                     <label for="type-ui_in">ui_in:</label>
                     <select id="type-ui_in" class="diagram-type">
@@ -231,6 +243,7 @@
             </div>
         </div>
     </div>
+    <script src="digital_twin_Full.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

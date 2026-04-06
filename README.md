@@ -51,10 +51,12 @@ For detailed information on the Web Serial API features utilized in this project
 | `COMPLIANCE_TESTS.md` | Tiny Tapeout Web Serial compliance testing results | Planned |
 | `GEMINI.md` | Project goal and structural guidelines | Present |
 | `HOWTO_TINY_TAPEOUT.md` | Guide to loading and testing Tiny Tapeout modules | Planned |
+| `PMOD_PINOUT.md` | Documentation of common PMOD pinouts | Present |
 | `README.md` | Overview of the product | Present |
 | `ROADMAP.md` | Progress tracking and future steps | Planned |
 | `SERIAL_PORT_ACCESS.md` | Guide to accessing the Cortex-M3 serial port | Present |
 | `TOOLCHAIN_SETUP.md` | Instructions for setting up the toolchains | Planned |
+| `WASM_INTEGRATION.md` | Documentation for the WASM simulation interface | Present |
 
 ## UART Configuration
 The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 peripheral.
@@ -63,8 +65,8 @@ The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 periphera
 
 | Signal | FPGA Pin | Description |
 | :--- | :--- | :--- |
-| **UART0 RX** | 44 (IOB13B) | Receive data input |
-| **UART0 TX** | 46 (IOB13A) | Transmit data output |
+| **UART0 TX** | 44 (IOB13B) | Transmit data output |
+| **UART0 RX** | 46 (IOB13A) | Receive data input |
 
 ## Pinout Tang Nano 4K
 

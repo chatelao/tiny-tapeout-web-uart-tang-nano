@@ -6,6 +6,8 @@
     <FileList>
         <File path="C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\gowin_empu\gowin_empu.v" type="verilog"/>
         <File path="C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\top.v" type="verilog"/>
+        <File path="C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\tt_project.v" type="verilog"/>
+        <File path="C:\Users\chatelain\Dropbox\Privat-2026\2026-04-03_TT-On-TangNano4k\tiny-tapeout-web-uart-tang-nano\src\src\tt_wrapper.v" type="verilog"/>
     </FileList>
     <OptionList>
         <Option type="disable_insert_pad" value="0"/>

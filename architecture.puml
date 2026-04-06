@@ -13,27 +13,40 @@ System_Boundary(host, "Host PC") {
     Rel(browser, web_page, "Loads and runs")
 }
 
-Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
-    Component(m3, "Cortex-M3 Hard Core", "ARMv7-M", "Gowin_EMPU_M3 IP")
+Boundary(board, "Tang Nano 4K Board") {
+    Component(bridge, "USB/JTAG Bridge", "BL702", "Programming & UART Interface")
 
-    Boundary(fabric, "FPGA Fabric") {
-        Component(apb_slots, "APB2 Slots (0x40002400)", "Register-mapped", "TT Control and Data")
+    Container_Boundary(soc, "GW1NSR-4C SoC (Tang Nano 4K)") {
+        Component(m3, "Cortex-M3 Hard Core", "ARMv7-M", "Gowin_EMPU_M3 IP")
 
-        Rel(m3, apb_slots, "APB2 Expansion")
+        Boundary(fabric, "FPGA Fabric") {
+            Component(tt_wrapper, "TT APB2 Wrapper", "Register-mapped", "0x40002400")
+            Component(tt_module, "TT Module", "tt_um_minimal_echo", "Tiny Tapeout Project")
+
+            Rel(tt_wrapper, tt_module, "ui_in[7:0], uio_in[7:0]\nclk, rst_n, ena")
+            Rel(tt_module, tt_wrapper, "uo_out[7:0], uio_out[7:0]\nuio_oe[7:0]")
+        }
+
+        Boundary(flash, "Flash Memory") {
+            Component(int_flash, "Internal Flash (32KB)", "0x00000000", "Firmware (.bin)")
+            Component(cfg_flash, "FPGA Cfg. Flash", "~200KB", "Bitstream (.fs)")
+        }
+
+        Component(int_sram, "Internal SRAM (22KB)", "0x20000000", "Stack & Fast Heap")
+        Component(uart0, "UART0 (0x40004000)", "115200 8N1", "Serial Console")
+
+        Rel(m3, int_flash, "I-Code/D-Code")
+        Rel(m3, int_sram, "System Bus")
+        Rel(m3, uart0, "APB1")
+        Rel(m3, tt_wrapper, "APB2")
+        Rel(cfg_flash, fabric, "Configures")
     }
-
-    Component(int_flash, "Internal Flash (32KB)", "0x00000000", "Bootloader & Vectors (bin)")
-    Component(int_sram, "Internal SRAM (22KB)", "0x20000000", "Stack & Fast Heap")
-    Component(uart0, "UART0 (0x40004000)", "115200 8N1", "Serial Console")
-    Component(cfg_flash, "FPGA Cfg. Flash", "~200KB", "Bitstream (fst)")
-
-    Rel(m3, int_flash, "I-Code/D-Code")
-    Rel(m3, int_sram, "System Bus")
-    Rel(m3, uart0, "APB")
-    Rel(cfg_flash, fabric, "Configures")
 }
 
 Rel(user, browser, "Interacts with")
-Rel(browser, uart0, "WebSerial", "USB-C Bridge (Pins 18/19)")
+Rel(browser, bridge, "WebSerial / WebUSB", "USB-C")
+Rel(bridge, uart0, "UART", "Pins 44/46")
+Rel(bridge, int_flash, "JTAG/SWD", "Firmware")
+Rel(bridge, cfg_flash, "JTAG", "Bitstream")
 
 @enduml

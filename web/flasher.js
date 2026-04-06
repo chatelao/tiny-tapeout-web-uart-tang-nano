@@ -1,8 +1,9 @@
-import { openFPGALoader } from 'https://cdn.jsdelivr.net/npm/@yowasp/openfpgaloader/dist/web.js';
+import { runOpenFPGALoader as openFPGALoader } from 'https://cdn.jsdelivr.net/npm/@yowasp/openfpgaloader@1.1.1-18.211/gen/bundle.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('bitstreamInput');
     const flashBtn = document.getElementById('flashBtn');
+    const flasherStatus = document.getElementById('flasherStatus');
     const consoleDiv = document.getElementById('console');
 
     function logToConsole(message) {
@@ -15,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
         flashBtn.disabled = !fileInput.files.length;
         if (fileInput.files.length) {
             logToConsole(`Selected file: ${fileInput.files[0].name}`);
+            flasherStatus.textContent = "Ready to flash";
+        } else {
+            flasherStatus.textContent = "Ready";
         }
     });
 
@@ -23,28 +27,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             flashBtn.disabled = true;
+            flashBtn.textContent = "Flashing...";
+            flasherStatus.textContent = "Reading bitstream...";
+
             const file = fileInput.files[0];
             logToConsole(`Reading bitstream: ${file.name}...`);
 
             const arrayBuffer = await file.arrayBuffer();
             const bitstream = new Uint8Array(arrayBuffer);
 
-            logToConsole("Requesting WebUSB device (BL702)...");
-            const device = await navigator.usb.requestDevice({
-                filters: [{ vendorId: 0x0403, productId: 0x6010 }]
+            flasherStatus.textContent = "Requesting device...";
+            logToConsole("Initializing JTAG and writing to SRAM...");
+
+            const filesIn = {
+                'bitstream.fs': bitstream
+            };
+            const args = ['-b', 'tangnano4k', '--write-sram', 'bitstream.fs'];
+
+            const decoder = new TextDecoder();
+            const logHandler = (bytes) => {
+                if (bytes) {
+                    const text = decoder.decode(bytes, { stream: true });
+                    logToConsole(text);
+                    if (text.includes('%')) {
+                        flasherStatus.textContent = `Writing: ${text.trim()}`;
+                    }
+                }
+            };
+
+            await openFPGALoader(args, filesIn, {
+                stdout: logHandler,
+                stderr: logHandler
             });
 
-            logToConsole("Initializing JTAG and writing to SRAM...");
-            // Redirecting openFPGALoader output to console if possible would be nice,
-            // but the basic implementation uses console.log internally often.
-            await openFPGALoader.flash(device, bitstream, { board: 'tangnano4k', target: 'sram' });
-
+            flasherStatus.textContent = "SRAM Flash Complete!";
             logToConsole("SRAM Flash Complete!");
         } catch (err) {
+            flasherStatus.textContent = "Error: Flashing failed";
             logToConsole(`Error: ${err.message || err}`);
             console.error("Flashing failed:", err);
         } finally {
             flashBtn.disabled = false;
+            flashBtn.textContent = "Flash to SRAM";
         }
     });
 
