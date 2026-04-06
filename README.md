@@ -101,14 +101,14 @@ The Tiny Tapeout Web Serial REPL is accessible via the Cortex-M3 UART0 periphera
 
 ### Available Header Pins
 
-| Bank | Pins |
-| :--- | :--- |
-| **Bank 0** | 9 (DONE) |
-| **Bank 1** | 39, 40, 41, 42, 43, 44, 46 |
-| **Bank 2** | 33 |
-| **Bank 3** | 13, 16, 17, 20, 21, 22, 23 |
+| Bank | Pins | Expected Voltage (VCCIO) |
+| :--- | :--- | :--- |
+| **Bank 0** | 9 (DONE) | 1.8V |
+| **Bank 1** | 39, 40, 41, 42, 43, 44, 46 | 1.8V |
+| **Bank 2** | 33 | 1.8V |
+| **Bank 3** | 13, 16, 17, 20, 21, 22, 23 | 1.8V |
 
-*Note: JTAG and Flash pins should be avoided for general use to maintain programmability.*
+*Note: JTAG and Flash pins should be avoided for general use to maintain programmability. While the GW1NSR supports multiple I/O standards, this project's default configuration sets all VCCIO banks to 1.8V.*
 
 ## IP Core Configuration (Gowin EDA)
 
