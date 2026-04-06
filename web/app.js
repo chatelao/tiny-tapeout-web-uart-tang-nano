@@ -239,8 +239,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function logToConsole(message) {
         const timestamp = new Date().toLocaleTimeString();
-        consoleDiv.textContent += `[${timestamp}] ${message}\n`;
+        const newMessage = `[${timestamp}] ${message}\n`;
+        consoleDiv.textContent += newMessage;
         consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        console.log(`CONSOLE_MSG: ${message}`);
+        window.dispatchEvent(new CustomEvent('console-log', { detail: message }));
+        console.log(`Dispatched console-log event with detail: ${message}`);
     }
 
     function getBits(inputs) {
@@ -610,15 +614,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 digitalTwin.step();
             }
 
-            return {
+            const res = {
+                source: 'WASM',
                 uo_out: digitalTwin.get_uo_out(),
                 uio_out: digitalTwin.get_uio_out(),
                 uio_oe: digitalTwin.get_uio_oe()
             };
+            console.log(`mockBoard results from WASM: ${JSON.stringify(res)}`);
+            return res;
         } else {
             // Emulate behavior: uo_out = ui_in ^ uio_in (XOR)
             const result = (uiValue ^ uioInValue) & 0xFF;
             return {
+                source: 'XOR',
                 uo_out: result,
                 uio_out: 0,
                 uio_oe: 0
@@ -686,7 +694,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             outputs = mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal);
-            logToConsole(`Received (Emulated): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
+            const sourceText = (useFullWasm.checked && wasmReady && digitalTwin) ? "WASM" : "XOR";
+            logToConsole(`Received (Emulated ${sourceText}): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
         }
 
         historyData.push({
