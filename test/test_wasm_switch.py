@@ -21,15 +21,19 @@ def run_test():
             browser = p.chromium.launch(headless=True)
             context = browser.new_context()
 
+            # Inject script to capture console-log events
+            context.add_init_script("""
+                window.lastLogs = [];
+                window.addEventListener('console-log', (e) => {
+                    window.lastLogs.push(e.detail);
+                });
+            """)
+
             page = context.new_page()
             page.on("console", lambda msg: print(f"BROWSER CONSOLE: {msg.text}"))
 
             print("Navigating to http://localhost:8000")
             page.goto("http://localhost:8000")
-
-            # Enable WASM Simulation
-            print("Checking #useFullWasm")
-            page.check("#useFullWasm")
 
             # Wait for the dropdown to be populated
             print("Waiting for WASM engines to load...")
@@ -55,27 +59,17 @@ def run_test():
                 # Select the project
                 page.select_option("#wasmEngineSelect", project)
 
-                # Wait for page reload (since app.js reloads on change)
+                # Wait for page reload
                 page.wait_for_load_state("networkidle")
 
                 # Re-enable WASM Simulation if it was reset by reload
+                # Also check if it's already checked due to localStorage
                 if not page.is_checked("#useFullWasm"):
                     page.check("#useFullWasm")
 
                 # Wait for WASM to be ready
                 print(f"Waiting for WASM {project} to be ready...")
-                try:
-                    # We look for the message in the console log
-                    # This might fail if it happened before we started waiting
-                    with page.expect_console_message(lambda m: f"CONSOLE_MSG: WASM Simulation initialized: {project}" in m.text, timeout=10000):
-                        pass
-                except:
-                     # Check if it is already in the div
-                     content = page.evaluate("document.getElementById('console').textContent")
-                     if f"WASM Simulation initialized: {project}" not in content:
-                         print(f"WARNING: Could not confirm WASM {project} is initialized. Content: {content}")
-                         # Let's wait a bit more just in case
-                         time.sleep(2)
+                page.wait_for_function(f"window.lastLogs && window.lastLogs.some(log => log.includes('WASM Simulation initialized: {project}'))", timeout=20000)
 
                 # Step 1: 0xDD
                 print(f"Executing step 1: 0xDD for {project}")
@@ -83,8 +77,15 @@ def run_test():
                 page.press("#ui_in_hex", "Enter")
 
                 page.click("#sendReceive")
-                page.wait_for_function("window.lastLog && window.lastLog.includes('Received (Emulated WASM)')", timeout=10000)
-                page.evaluate("window.lastLog = ''")
+
+                # Wait for "Received (Emulated WASM)"
+                page.wait_for_function("window.lastLogs && window.lastLogs.some(log => log.includes('Received (Emulated WASM)'))", timeout=10000)
+
+                # Verify it's actually in the console div too
+                expect(page.locator("#console")).to_contain_text("Received (Emulated WASM)", timeout=5000)
+
+                # Clear logs for next step
+                page.evaluate("window.lastLogs = []")
 
                 # Step 2: 0x55
                 print(f"Executing step 2: 0x55 for {project}")
@@ -92,13 +93,21 @@ def run_test():
                 page.press("#ui_in_hex", "Enter")
 
                 page.click("#sendReceive")
-                page.wait_for_function("window.lastLog && window.lastLog.includes('Received (Emulated WASM)')", timeout=10000)
-                page.evaluate("window.lastLog = ''")
+                page.wait_for_function("window.lastLogs && window.lastLogs.some(log => log.includes('Received (Emulated WASM)'))", timeout=10000)
+                expect(page.locator("#console")).to_contain_text("Received (Emulated WASM)", timeout=5000)
+
+                # Clear logs for next project
+                page.evaluate("window.lastLogs = []")
 
             print("WASM Project switching test completed!")
             browser.close()
     except Exception as e:
         print(f"An error occurred: {e}")
+        # Take a screenshot on failure
+        if 'page' in locals():
+            page.screenshot(path="wasm_switch_failure.png")
+            print("Screenshot saved to wasm_switch_failure.png")
+        raise e
     finally:
         os.kill(server_process.pid, signal.SIGTERM)
 

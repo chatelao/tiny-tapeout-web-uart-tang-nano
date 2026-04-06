@@ -123,7 +123,7 @@ def run_test():
 
             page.click("#sendReceive")
             # 0x55 ^ 0xAA = 0xFF
-            expect(page.locator("#console")).to_contain_text("Received (Emulated): uo_out=0xFF", timeout=5000)
+            expect(page.locator("#console")).to_contain_text("Received (Emulated XOR): uo_out=0xFF", timeout=5000)
 
             # 6. Test Sweep 0...255 functionality
             print("Clicking 0...255 sweep button...")
