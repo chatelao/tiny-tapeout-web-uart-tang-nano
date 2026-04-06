@@ -125,7 +125,26 @@ def run_test():
             # 0x55 ^ 0xAA = 0xFF
             expect(page.locator("#console")).to_contain_text("Received (Emulated): uo_out=0xFF", timeout=5000)
 
-            print("WebSerial functionality test passed!")
+            # 6. Test Sweep 0...255 functionality
+            print("Clicking 0...255 sweep button...")
+            # Switch clk to 1 or 0 to have exactly 256 transactions
+            page.select_option("#clk", "1")
+
+            # Count current history rows
+            initial_history_count = page.locator("#history tr").count()
+            print(f"Initial history count: {initial_history_count}")
+
+            page.click("#sweepInputs")
+
+            # Wait for sweep to complete
+            expect(page.locator("#console")).to_contain_text("Sweep complete (256 cycles added)", timeout=10000)
+
+            # Verify history count increased by 256
+            final_history_count = page.locator("#history tr").count()
+            print(f"Final history count: {final_history_count}")
+            assert final_history_count == initial_history_count + 256
+
+            print("WebSerial functionality and sweep test passed!")
             browser.close()
     finally:
         os.kill(server_process.pid, signal.SIGTERM)
