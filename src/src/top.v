@@ -1,4 +1,9 @@
-/* top.v - m3_uart_echo */
+/*
+ * top.v - m3_uart_echo
+ *
+ * Expected Voltage (VCCIO): 1.8V
+ * I/O Standard: LVCMOS18
+ */
 module top (
     input  wire       clk_27m,
     output wire       uart0_txd,    // Pin 44
