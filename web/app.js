@@ -1,3 +1,56 @@
+// Initialize WASM Engine dynamic loading
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const wasmParam = urlParams.get('wasm');
+
+    // Security check: validate wasmParam
+    let wasmEngine = 'default';
+    if (wasmParam && /^tt\d+$/.test(wasmParam)) {
+        wasmEngine = wasmParam;
+    }
+
+    const config = {
+        locateFile: function(path) {
+            if (path.endsWith('.wasm')) {
+                if (wasmEngine === 'default') {
+                    return path; // Local file
+                } else {
+                    // Use jsdelivr CDN for correct MIME type
+                    return `https://cdn.jsdelivr.net/gh/chatelao/tt-test-framework@main/wasm/${wasmEngine}.wasm`;
+                }
+            }
+            return path;
+        }
+    };
+
+    const script = document.createElement('script');
+    if (wasmEngine === 'default') {
+        window.Module = config;
+        script.src = 'digital_twin_Full.js';
+    } else {
+        // Use jsdelivr CDN for correct MIME type
+        script.src = `https://cdn.jsdelivr.net/gh/chatelao/tt-test-framework@main/wasm/${wasmEngine}.js`;
+        script.onload = () => {
+            const factory = window[wasmEngine];
+            if (typeof factory === 'function') {
+                factory(config).then(instance => {
+                    // Log before merge
+                    console.log(`WASM ${wasmEngine} instance created`);
+                    // Merge instance into window.Module to keep references
+                    window.Module = Object.assign(window.Module || {}, instance);
+                    if (window.Module.onRuntimeInitialized) {
+                        window.Module.onRuntimeInitialized();
+                    }
+                });
+            } else {
+                console.error(`Factory window[${wasmEngine}] not found`);
+            }
+        };
+    }
+    document.head.appendChild(script);
+    window.currentWasmEngine = wasmEngine;
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
     const uiIn = document.getElementById('ui_in').querySelectorAll('input');
     const uioIn = document.getElementById('uio_in').querySelectorAll('input');
@@ -26,6 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectBtn = document.getElementById('connectBtn');
     const statusLabel = document.getElementById('statusLabel');
     const useFullWasm = document.getElementById('useFullWasm');
+    const wasmEngineSelect = document.getElementById('wasmEngineSelect');
+
+    // Set dropdown value from current URL
+    wasmEngineSelect.value = window.currentWasmEngine;
+
+    wasmEngineSelect.addEventListener('change', () => {
+        const url = new URL(window.location.href);
+        const selectedWasm = wasmEngineSelect.value;
+        if (selectedWasm === 'default') {
+            url.searchParams.delete('wasm');
+        } else {
+            url.searchParams.set('wasm', selectedWasm);
+        }
+        window.location.href = url.toString();
+    });
 
     // Initialize Use Full WASM from localStorage
     const savedWasmPreference = localStorage.getItem('useFullWasm');
@@ -35,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     useFullWasm.addEventListener('change', () => {
         localStorage.setItem('useFullWasm', useFullWasm.checked);
-        logToConsole(`Use Full FP8 WASM: ${useFullWasm.checked}`);
+        logToConsole(`Use WASM Simulation: ${useFullWasm.checked}`);
     });
 
     let port = null;
@@ -493,14 +561,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let wasmReady = false;
 
     function initDigitalTwin() {
-        if (typeof Module !== 'undefined' && Module.DigitalTwin && !wasmReady) {
-            try {
-                digitalTwin = new Module.DigitalTwin();
-                wasmReady = true;
-                logToConsole('Full FP8 WASM Module initialized and DigitalTwin created');
-                return true;
-            } catch (e) {
-                console.error('Failed to create DigitalTwin', e);
+        if (typeof Module !== 'undefined' && !wasmReady) {
+            const DigitalTwinClass = Module.DigitalTwin || Module.ProjectWasm;
+            if (DigitalTwinClass) {
+                try {
+                    digitalTwin = new DigitalTwinClass();
+                    wasmReady = true;
+                    logToConsole(`WASM Simulation initialized: ${window.currentWasmEngine}`);
+                    return true;
+                } catch (e) {
+                    console.error('Failed to create DigitalTwin', e);
+                }
             }
         }
         return false;
@@ -520,7 +591,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wasmReady) {
             clearInterval(wasmCheckInterval);
         } else {
-            initDigitalTwin();
+            if (initDigitalTwin()) {
+                clearInterval(wasmCheckInterval);
+            }
         }
     }, 500);
 
@@ -798,6 +871,51 @@ document.addEventListener('DOMContentLoaded', () => {
             logToConsole('Failed to copy permalink');
         });
     });
+
+    async function fetchWasmEngines() {
+        try {
+            logToConsole('Fetching WASM engines and project titles from GitHub...');
+            // Fetch WASM files
+            const wasmFilesResponse = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/wasm');
+            if (!wasmFilesResponse.ok) throw new Error(`HTTP error fetching wasm! status: ${wasmFilesResponse.status}`);
+            const wasmFiles = await wasmFilesResponse.json();
+            const engines = wasmFiles.filter(f => f.name.endsWith('.js')).map(f => f.name.replace('.js', ''));
+
+            // Fetch data files for titles
+            const dataFilesResponse = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
+            if (!dataFilesResponse.ok) throw new Error(`HTTP error fetching data! status: ${dataFilesResponse.status}`);
+            const dataFiles = await dataFilesResponse.json();
+
+            // Map project number to title (e.g. tt3990 -> fp8_mul)
+            const titleMap = {};
+            dataFiles.forEach(f => {
+                if (f.name.endsWith('.yaml')) {
+                    const match = f.name.match(/^(tt\d+)[_-](.+)\.yaml$/);
+                    if (match) {
+                        titleMap[match[1]] = match[2];
+                    }
+                }
+            });
+
+            // Populate dropdown
+            engines.forEach(engine => {
+                const option = document.createElement('option');
+                option.value = engine;
+                const title = titleMap[engine] || '';
+                option.textContent = `${engine} ${title}`.trim();
+                wasmEngineSelect.appendChild(option);
+            });
+
+            // Ensure the selection is restored after populating
+            wasmEngineSelect.value = window.currentWasmEngine;
+            logToConsole(`Fetched ${engines.length} WASM engines`);
+        } catch (e) {
+            console.error('Failed to fetch WASM engines', e);
+            logToConsole('Failed to fetch WASM engines from GitHub');
+        }
+    }
+
+    fetchWasmEngines();
 
     async function fetchTestsets() {
         try {

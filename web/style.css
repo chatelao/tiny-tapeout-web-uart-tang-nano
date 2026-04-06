@@ -313,6 +313,26 @@ button:hover {
     justify-content: center;
     align-items: center;
     gap: 15px;
+    flex-wrap: wrap;
+}
+
+.wasm-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #e7f3ff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid #cce4ff;
+}
+
+#wasmEngineSelect {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 0.85rem;
+    font-family: inherit;
 }
 
 #statusLabel, .status-label {

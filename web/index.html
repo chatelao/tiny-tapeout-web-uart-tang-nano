@@ -99,9 +99,14 @@
             <div class="serial-controls">
                 <button id="connectBtn">Connect</button>
                 <span id="statusLabel">Simulation Mode</span>
-                <label class="wasm-toggle">
-                    <input type="checkbox" id="useFullWasm"> Use Full FP8 WASM
-                </label>
+                <div class="wasm-controls">
+                    <select id="wasmEngineSelect">
+                        <option value="default">Default (Built-in)</option>
+                    </select>
+                    <label class="wasm-toggle">
+                        <input type="checkbox" id="useFullWasm"> Use WASM Simulation
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -230,7 +235,6 @@
             </div>
         </div>
     </div>
-    <script src="digital_twin_Full.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
