@@ -18,7 +18,11 @@ This example demonstrates how to use the UART0 peripheral on the Cortex-M3 "Hard
 | LED | 10 | `led_pin` |
 | Clock | 45 | `clk_27m` |
 
-## 3. Register Layout
+## 3. Electrical Requirements
+- **VCCIO**: 1.8V for all IO banks.
+- **I/O Standard**: LVCMOS18.
+
+## 4. Register Layout
 
 The following registers are used for UART0 (Base `0x40004000`):
 
