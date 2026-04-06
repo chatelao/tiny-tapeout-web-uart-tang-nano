@@ -624,10 +624,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof digitalTwin.set_rst_n === 'function') {
                     digitalTwin.set_rst_n(rstVal === 1);
                 }
+                if (typeof digitalTwin.set_clk === 'function') {
+                    digitalTwin.set_clk(clkVal === 1);
+                }
 
-                // Only advance the simulation on a logical rising edge in the UI
-                if (clkVal === 1 && typeof digitalTwin.step === 'function') {
-                    digitalTwin.step();
+                // Advance simulation
+                if (typeof digitalTwin.eval === 'function') {
+                    digitalTwin.eval();
+                }
+                if (typeof digitalTwin.step === 'function') {
+                    // For modern DigitalTwins, step() should be called on every change
+                    // if set_clk is available. For legacy, only on rising edges.
+                    if (typeof digitalTwin.set_clk === 'function' || clkVal === 1) {
+                        digitalTwin.step();
+                    }
                 }
 
                 const res = {
@@ -802,12 +812,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         logToConsole("Starting 0...255 sweep...");
 
+        let clkVal = 0;
         for (let i = 0; i < 256; i++) {
             if (clkSelection === '1/0') {
-                await performTransaction(i, i, 1, rstVal, enaVal, true);
-                await performTransaction(i, i, 0, rstVal, enaVal, true);
+                clkVal = 1;
+                await performTransaction(i, i, clkVal, rstVal, enaVal, true);
+                clkVal = 0;
+                await performTransaction(i, i, clkVal, rstVal, enaVal, true);
             } else {
-                const clkVal = parseInt(clkSelection);
+                clkVal = parseInt(clkSelection);
                 await performTransaction(i, i, clkVal, rstVal, enaVal, true);
             }
 
@@ -1033,6 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let uioVal = getBits(uioIn);
         let rstVal = rstN.checked ? 1 : 0;
         let enaVal = ena.checked ? 1 : 0;
+        let clkVal = 0; // Start with clk low for consistency
         const clkSelection = clk.value;
 
         for (const step of currentTestset.test_steps) {
@@ -1049,11 +1063,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const numCycles = step.cycles || 1;
             for (let i = 0; i < numCycles; i++) {
                 if (clkSelection === '1/0') {
-                    await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
-                    await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                    // Toggle clock
+                    clkVal = 1;
+                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                    clkVal = 0;
+                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
                 } else {
-                    const cVal = parseInt(clkSelection);
-                    await performTransaction(uiVal, uioVal, cVal, rstVal, enaVal);
+                    clkVal = parseInt(clkSelection);
+                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
                 }
                 // Yield to main thread
                 await new Promise(r => setTimeout(r, 0));
