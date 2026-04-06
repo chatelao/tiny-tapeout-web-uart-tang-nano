@@ -38,6 +38,11 @@
                     console.log(`WASM ${wasmEngine} instance created`);
                     // Merge instance into window.Module to keep references
                     window.Module = Object.assign(window.Module || {}, instance);
+
+                    if (window.initDigitalTwin) {
+                        window.initDigitalTwin();
+                    }
+
                     if (window.Module.onRuntimeInitialized) {
                         window.Module.onRuntimeInitialized();
                     }
@@ -582,6 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
+    window.initDigitalTwin = initDigitalTwin;
+
     // The WASM module initialized by digital_twin_Full.js
     if (typeof Module !== 'undefined') {
         if (!initDigitalTwin()) {
@@ -604,24 +611,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         if (useFullWasm.checked && wasmReady && digitalTwin) {
-            digitalTwin.set_ui_in(uiValue);
-            digitalTwin.set_uio_in(uioInValue);
-            digitalTwin.set_ena(enaVal === 1);
-            digitalTwin.set_rst_n(rstVal === 1);
+            try {
+                if (typeof digitalTwin.set_ui_in === 'function') {
+                    digitalTwin.set_ui_in(uiValue);
+                }
+                if (typeof digitalTwin.set_uio_in === 'function') {
+                    digitalTwin.set_uio_in(uioInValue);
+                }
+                if (typeof digitalTwin.set_ena === 'function') {
+                    digitalTwin.set_ena(enaVal === 1);
+                }
+                if (typeof digitalTwin.set_rst_n === 'function') {
+                    digitalTwin.set_rst_n(rstVal === 1);
+                }
 
-            // Only advance the simulation on a logical rising edge in the UI
-            if (clkVal === 1) {
-                digitalTwin.step();
+                // Only advance the simulation on a logical rising edge in the UI
+                if (clkVal === 1 && typeof digitalTwin.step === 'function') {
+                    digitalTwin.step();
+                }
+
+                const res = {
+                    source: 'WASM',
+                    uo_out: typeof digitalTwin.get_uo_out === 'function' ? digitalTwin.get_uo_out() : 0,
+                    uio_out: typeof digitalTwin.get_uio_out === 'function' ? digitalTwin.get_uio_out() : 0,
+                    uio_oe: typeof digitalTwin.get_uio_oe === 'function' ? digitalTwin.get_uio_oe() : 0
+                };
+                console.log(`mockBoard results from WASM: ${JSON.stringify(res)}`);
+                return res;
+            } catch (e) {
+                console.error("Error in WASM mockBoard:", e);
+                logToConsole("Error in WASM mockBoard: " + e.message);
+                // Fallback to XOR if WASM fails
+                return {
+                    source: 'WASM_ERROR',
+                    uo_out: (uiValue ^ uioInValue) & 0xFF,
+                    uio_out: 0,
+                    uio_oe: 0
+                };
             }
-
-            const res = {
-                source: 'WASM',
-                uo_out: digitalTwin.get_uo_out(),
-                uio_out: digitalTwin.get_uio_out(),
-                uio_oe: digitalTwin.get_uio_oe()
-            };
-            console.log(`mockBoard results from WASM: ${JSON.stringify(res)}`);
-            return res;
         } else {
             // Emulate behavior: uo_out = ui_in ^ uio_in (XOR)
             const result = (uiValue ^ uioInValue) & 0xFF;
