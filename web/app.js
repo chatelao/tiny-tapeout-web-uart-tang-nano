@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clk = document.getElementById('clk');
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
+    const sweepInputsBtn = document.getElementById('sweepInputs');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
     const importCsvBtn = document.getElementById('importCsv');
@@ -755,6 +756,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const clkVal = parseInt(clkSelection);
             await performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
+    });
+
+    sweepInputsBtn.addEventListener('click', async () => {
+        sweepInputsBtn.disabled = true;
+        const rstVal = rstN.checked ? 1 : 0;
+        const enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+
+        logToConsole("Starting 0...255 sweep...");
+
+        for (let i = 0; i < 256; i++) {
+            if (clkSelection === '1/0') {
+                await performTransaction(i, i, 1, rstVal, enaVal, true);
+                await performTransaction(i, i, 0, rstVal, enaVal, true);
+            } else {
+                const clkVal = parseInt(clkSelection);
+                await performTransaction(i, i, clkVal, rstVal, enaVal, true);
+            }
+
+            // Yield to main thread every 16 iterations
+            if (i % 16 === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        updateDiagram();
+        logToConsole("Sweep complete (256 cycles added)");
+        sweepInputsBtn.disabled = false;
     });
 
     async function importFromCsv(file) {
