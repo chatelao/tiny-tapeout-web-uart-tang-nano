@@ -572,7 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initDigitalTwin() {
         if (typeof Module !== 'undefined' && !wasmReady) {
-            const DigitalTwinClass = Module.DigitalTwin || Module.ProjectWasm;
+            // Prioritize ProjectWasm class per spec
+            const DigitalTwinClass = Module.ProjectWasm || Module.DigitalTwin;
             if (DigitalTwinClass) {
                 try {
                     digitalTwin = new DigitalTwinClass();
@@ -612,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         if (useFullWasm.checked && wasmReady && digitalTwin) {
             try {
+                // Update inputs
                 if (typeof digitalTwin.set_ui_in === 'function') {
                     digitalTwin.set_ui_in(uiValue);
                 }
@@ -628,15 +630,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     digitalTwin.set_clk(clkVal === 1);
                 }
 
-                // Advance simulation
+                // Advance simulation logic:
+                // Spec says call eval() after every change.
                 if (typeof digitalTwin.eval === 'function') {
                     digitalTwin.eval();
                 }
-                if (typeof digitalTwin.step === 'function') {
-                    // For modern DigitalTwins, step() should be called on every change
-                    // if set_clk is available. For legacy, only on rising edges.
-                    if (typeof digitalTwin.set_clk === 'function' || clkVal === 1) {
+
+                // Backward compatibility for legacy DigitalTwin that uses step() on rising edge
+                if (typeof digitalTwin.step === 'function' && typeof digitalTwin.set_clk !== 'function') {
+                    if (clkVal === 1) {
                         digitalTwin.step();
+                        if (typeof digitalTwin.eval === 'function') {
+                            digitalTwin.eval();
+                        }
                     }
                 }
 
@@ -926,12 +932,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset WASM DigitalTwin state if available
         if (digitalTwin) {
             try {
-                // Perform a hard reset in simulation
-                digitalTwin.set_rst_n(false);
-                digitalTwin.step();
-                digitalTwin.step();
-                digitalTwin.set_rst_n(true);
-                digitalTwin.step();
+                // Perform a hard reset in simulation per spec
+                if (typeof digitalTwin.set_rst_n === 'function') {
+                    digitalTwin.set_rst_n(false);
+                }
+                if (typeof digitalTwin.set_clk === 'function') {
+                    digitalTwin.set_clk(false);
+                }
+                if (typeof digitalTwin.eval === 'function') {
+                    digitalTwin.eval();
+                } else if (typeof digitalTwin.step === 'function') {
+                    digitalTwin.step();
+                }
+
+                if (typeof digitalTwin.set_rst_n === 'function') {
+                    digitalTwin.set_rst_n(true);
+                }
+                if (typeof digitalTwin.eval === 'function') {
+                    digitalTwin.eval();
+                }
                 logToConsole('Simulation state reset');
             } catch (e) {
                 console.error('Failed to reset DigitalTwin', e);
