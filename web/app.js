@@ -4,7 +4,7 @@
     const wasmParam = urlParams.get('wasm');
 
     // Security check: validate wasmParam
-    let wasmEngine = 'default';
+    let wasmEngine = 'tt3647';
     if (wasmParam && /^tt\d+$/.test(wasmParam)) {
         wasmEngine = wasmParam;
     }

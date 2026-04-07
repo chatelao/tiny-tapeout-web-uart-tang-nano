@@ -48,7 +48,7 @@ module tt_m3_wrapper (
 
     // --- Tiny Tapeout Module Instantiation ---
     // Note: Change 'tt_um_minimal_echo' to your actual TT module name
-    tt_um_minimal_echo tt_inst (
+    tt_um_essen tt_inst (
         .ui_in  (ui_in),
         .uo_out (uo_out),
         .uio_in (uio_in),
