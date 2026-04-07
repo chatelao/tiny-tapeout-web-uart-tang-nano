@@ -9,6 +9,18 @@
         <File path="src/top.v" type="file.verilog" enable="1"/>
         <File path="src/tt_project.v" type="file.verilog" enable="1"/>
         <File path="src/tt_wrapper.v" type="file.verilog" enable="1"/>
+        <File path="src/bf16_add.v" type="file.verilog" enable="1"/>
+        <File path="src/bf16_mul.v" type="file.verilog" enable="1"/>
+        <File path="src/booth_unsigned_mul.v" type="file.verilog" enable="1"/>
+        <File path="src/bsc.v" type="file.verilog" enable="1"/>
+        <File path="src/ir.v" type="file.verilog" enable="1"/>
+        <File path="src/jtag.v" type="file.verilog" enable="1"/>
+        <File path="src/lzc.v" type="file.verilog" enable="1"/>
+        <File path="src/mac.v" type="file.verilog" enable="1"/>
+        <File path="src/mac_fsm.v" type="file.verilog" enable="1"/>
+        <File path="src/mac_streamin.v" type="file.verilog" enable="1"/>
+        <File path="src/mac_streamout.v" type="file.verilog" enable="1"/>
+        <File path="src/mac_unit.v" type="file.verilog" enable="1"/>
         <File path="src/top.cst" type="file.cst" enable="1"/>
         <File path="src/m3.ld" type="file.other" enable="1"/>
         <File path="src/m3_regs.h" type="file.other" enable="1"/>
