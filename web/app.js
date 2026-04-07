@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rstN = document.getElementById('rst_n');
     const ena = document.getElementById('ena');
     const sweepInputsBtn = document.getElementById('sweepInputs');
+    const randomInputBtn = document.getElementById('randomInput');
     const sendReceiveBtn = document.getElementById('sendReceive');
     const exportCsvBtn = document.getElementById('exportCsv');
     const importCsvBtn = document.getElementById('importCsv');
@@ -787,6 +788,28 @@ document.addEventListener('DOMContentLoaded', () => {
             URL.revokeObjectURL(url);
         }, 100);
     }
+
+    randomInputBtn.addEventListener('click', async () => {
+        const uiValue = Math.floor(Math.random() * 256);
+        const uioInValue = Math.floor(Math.random() * 256);
+
+        uiInHex.value = uiValue.toString(16).padStart(2, '0').toUpperCase();
+        uioInHex.value = uioInValue.toString(16).padStart(2, '0').toUpperCase();
+        updateBitsFromHex(uiInHex, uiIn);
+        updateBitsFromHex(uioInHex, uioIn);
+
+        const rstVal = rstN.checked ? 1 : 0;
+        const enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+
+        if (clkSelection === '1/0') {
+            await performTransaction(uiValue, uioInValue, 1, rstVal, enaVal);
+            await performTransaction(uiValue, uioInValue, 0, rstVal, enaVal);
+        } else {
+            const clkVal = parseInt(clkSelection);
+            await performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
+        }
+    });
 
     sendReceiveBtn.addEventListener('click', async () => {
         const uiValue = getBits(uiIn);
