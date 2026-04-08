@@ -960,7 +960,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 digitalTwin.step();
                 digitalTwin.step();
                 digitalTwin.set_rst_n(true);
-                digitalTwin.step();
                 logToConsole('Simulation state reset');
             } catch (e) {
                 console.error('Failed to reset DigitalTwin', e);

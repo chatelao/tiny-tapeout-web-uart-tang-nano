@@ -1,0 +1,21 @@
+127.0.0.1 - - [08/Apr/2026 07:00:39] "GET /?wasm=tt3990 HTTP/1.1" 200 -
+127.0.0.1 - - [08/Apr/2026 07:00:39] "GET /app.js HTTP/1.1" 200 -
+127.0.0.1 - - [08/Apr/2026 07:00:39] "GET /style.css HTTP/1.1" 200 -
+Navigating to http://localhost:8000/?wasm=tt3990
+Waiting for WASM tt3990 to be ready...
+Loading Markdown from https://github.com/chatelao/ttihp-fp8-mul/blob/ihp-sg13cmos5l/TEST_CASES.md
+Waiting for tables to be parsed...
+Found 12 tables.
+--- Running FP8 Dot Product (Standard Protocol) - Table 1 ---
+--- Running FP4 Fast Lane (Short Protocol) - Table 1 ---
+--- Running Debug Mode: 0x0 (Default) - Table 1 ---
+--- Running Debug Mode: 0x1 (FSM State & Timing) - Table 1 ---
+--- Running Debug Mode: 0x2 (Exception Monitor) - Table 1 ---
+--- Running Debug Mode: 0x3 (Accumulator [31:24]) - Table 1 ---
+--- Running Debug Mode: 0x4 (Accumulator [23:16]) - Table 1 ---
+--- Running Debug Mode: 0x5 (Accumulator [15:8]) - Table 1 ---
+--- Running Debug Mode: 0x6 (Accumulator [7:0]) - Table 1 ---
+--- Running Debug Mode: 0x7 (Multiplier Lane 0 [15:8]) - Table 1 ---
+--- Running Debug Mode: 0x8 (Multiplier Lane 0 [7:0]) - Table 1 ---
+--- Running Debug Mode: 0x9 (Control Signals) - Table 1 ---
+Testing completed. Results saved to test_output_after_fix.log
