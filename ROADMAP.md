@@ -1,4 +1,5 @@
 # ROADMAP
+- [ ] Add "Replay" button (#163)
 - [x] gh pages - test.md - Allow for Column type to be added in paraenthesis "(...)" behind the column names, switch the type of the result and timing view accordingly (#161) (completed at 2026-04-08 16:22:02)
 - [x] Add to all columens the same dropdown of the format like in the timing diagramm and display the "read only" columns accordingly (#159) (completed at 2026-04-08 14:14:43)
 - [x] GH page - propose for each project after dropdown selection the <github>/<default branch>/docs/test.md as test URL (#157) (completed at 2026-04-08 11:00:20)
