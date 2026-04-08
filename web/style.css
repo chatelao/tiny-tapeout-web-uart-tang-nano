@@ -558,3 +558,11 @@ button:disabled {
         width: 100%;
     }
 }
+
+.value-zero {
+    color: #aaa;
+}
+
+.value-max {
+    color: #8b0000;
+}
