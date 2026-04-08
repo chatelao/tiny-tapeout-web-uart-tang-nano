@@ -39,13 +39,16 @@ def run_test():
             print("Waiting for WASM engines to load...")
             page.wait_for_selector("#wasmEngineSelect option:nth-child(2)", state="attached", timeout=30000)
 
-            # Get the first 10 projects (excluding 'default')
+            # Get the first 10 projects with WASM (excluding 'default')
             options = page.locator("#wasmEngineSelect option").all()
             project_values = []
-            for i in range(1, min(11, len(options))):
-                val = options[i].get_attribute("value")
-                if val and val != "default":
+            for opt in options:
+                val = opt.get_attribute("value")
+                text = opt.inner_text()
+                if val and val != "default" and "(No WASM)" not in text:
                     project_values.append(val)
+                    if len(project_values) >= 10:
+                        break
 
             print(f"Testing projects: {project_values}")
 
