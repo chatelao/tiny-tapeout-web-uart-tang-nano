@@ -1,4 +1,5 @@
 # ROADMAP
+- [ ] Try to add all missing WASM (#178)
 - [x] Update gh pages to show all projects available in tt-test-framework (#176) (completed at 2026-04-08 21:01:20)
 - [ ] Update gh pages to show all projects available in tt-test-framework (#173)
 - [x] Remove the "Testset Framework" from the gh pages (#171) (completed at 2026-04-08 19:16:42)
