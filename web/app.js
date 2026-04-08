@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mdTableSelect = document.getElementById('mdTableSelect');
     const runMdTableBtn = document.getElementById('runMdTable');
     const mdTableInfo = document.getElementById('mdTableInfo');
+    const mdJumpToLink = document.getElementById('mdJumpToLink');
     const diagramScaling = document.getElementById('diagram-scaling');
     const diagramImg = document.getElementById('diagram-img');
     const testsetInfo = document.getElementById('testsetInfo');
@@ -1079,6 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyDiagramScaling(savedScaling);
 
     clearDataBtn.addEventListener('click', () => {
+        mdJumpToLink.style.display = 'none';
         historyData.length = 0;
         cycleCount = 0;
         historyBody.innerHTML = '';
@@ -1251,6 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = md.split('\n');
         const chapters = [];
         let currentChapter = { title: 'General', tables: [] };
+        chapters.push(currentChapter);
         let currentTable = null;
 
         for (let i = 0; i < lines.length; i++) {
@@ -1282,10 +1285,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 i--; // Adjust for outer loop
             }
         }
-        return chapters;
+        return chapters.filter(c => c.tables.length > 0);
     }
 
     fetchMdBtn.addEventListener('click', async () => {
+        mdJumpToLink.style.display = 'none';
         const urlRaw = mdUrlInput.value.trim();
         const url = githubToRaw(urlRaw);
         if (!url) {
@@ -1323,6 +1327,24 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to fetch Markdown', e);
             logToConsole('Failed to fetch Markdown');
             mdTableInfo.textContent = 'Error loading Markdown.';
+        }
+    });
+
+    mdTableSelect.addEventListener('change', () => {
+        const selection = mdTableSelect.value;
+        if (!selection) {
+            mdJumpToLink.style.display = 'none';
+            return;
+        }
+
+        const [cIdx] = selection.split('-').map(Number);
+        const chapter = mdChapters[cIdx];
+        if (chapter && chapter.title !== 'General' && mdUrlInput.value) {
+            const slug = slugify(chapter.title);
+            mdJumpToLink.href = `${mdUrlInput.value}#${slug}`;
+            mdJumpToLink.style.display = 'inline-block';
+        } else {
+            mdJumpToLink.style.display = 'none';
         }
     });
 
@@ -1627,3 +1649,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
 });
+
+function slugify(text) {
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+        .replace(/^-+/, '')             // Trim - from start of text
+        .replace(/-+$/, '');            // Trim - from end of text
+}
