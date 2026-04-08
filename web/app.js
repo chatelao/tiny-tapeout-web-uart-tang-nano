@@ -1329,14 +1329,48 @@ document.addEventListener('DOMContentLoaded', () => {
         runMdTableBtn.disabled = true;
 
         const colMap = {};
+        const typeMapping = {
+            'e4m3': 'fp8_e4m3',
+            'fp8': 'fp8_e4m3',
+            'fp8 (e4m3)': 'fp8_e4m3',
+            'e3m4': 'fp8_e3m4',
+            'fp8 (e3m4)': 'fp8_e3m4',
+            'dual e2m1': 'dual_fp4',
+            'dual fp4': 'dual_fp4',
+            'hex': 'hex',
+            'dec': 'dec',
+            'bin': 'bin',
+            'bits': 'bits'
+        };
+
         table.headers.forEach((h, idx) => {
             const header = h.toLowerCase();
-            if (header.includes('ui_in')) colMap.ui_in = idx;
-            if (header.includes('uio_in')) colMap.uio_in = idx;
-            if (header.includes('uo_out')) colMap.uo_out = idx;
-            if (header.includes('uio_out')) colMap.uio_out = idx;
-            if (header.includes('uio_oe')) colMap.uio_oe = idx;
-            if (header.includes('cycle')) colMap.cycle = idx;
+            let channel = null;
+
+            if (header.includes('uio_in')) channel = 'uio_in';
+            else if (header.includes('ui_in')) channel = 'ui_in';
+            else if (header.includes('uio_out')) channel = 'uio_out';
+            else if (header.includes('uo_out')) channel = 'uo_out';
+            else if (header.includes('uio_oe')) channel = 'uio_oe';
+            else if (header.includes('cycle')) channel = 'cycle';
+
+            if (channel) {
+                colMap[channel] = idx;
+
+                // Extract type in parentheses
+                const typeMatch = h.match(/\(([^)]+)\)/);
+                if (typeMatch) {
+                    const typeStr = typeMatch[1].toLowerCase().trim();
+                    const mappedType = typeMapping[typeStr];
+                    if (mappedType) {
+                        const typeSelect = document.getElementById(`table-type-${channel}`);
+                        if (typeSelect) {
+                            typeSelect.value = mappedType;
+                            typeSelect.dispatchEvent(new Event('change'));
+                        }
+                    }
+                }
+            }
         });
 
         let lastUi = getBits(uiIn);
