@@ -1,6 +1,6 @@
 # ROADMAP
 - [ ] Remove the "Testset Framework" from the gh pages (#171)
-- [ ] Show 0x0 values in grey, 0xff values in dark red in the table (#169)
+- [x] Show 0x0 values in grey, 0xff values in dark red in the table (#169) (completed at 2026-04-08 19:02:14)
 - [ ] Show 0x0 values in grey, 0xff values in dark red in the table (#168)
 - [x] Show the link to the chapter of the currently selected test case to jump to it (in a new tab/window) (#167) (completed at 2026-04-08 18:51:54)
 - [x] Upfating test url.aftwr chnging the.project dies not work.well.on.my mobile.phone (#165) (completed at 2026-04-08 18:38:33)
