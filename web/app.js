@@ -104,6 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
     wasmEngineSelect.addEventListener('change', () => {
         const url = new URL(window.location.href);
         const selectedWasm = wasmEngineSelect.value;
+        // When switching WASM, clear the project param to avoid mismatch and force auto-discovery
+        url.searchParams.delete('project');
+        // Clear mdUrl too as it's likely project-specific
+        url.searchParams.delete('mdUrl');
         if (selectedWasm === 'default') {
             url.searchParams.delete('wasm');
         } else {
@@ -111,6 +115,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.location.href = url.toString();
     });
+
+    function updateURLParameter(projectName) {
+        const url = new URL(window.location.href);
+        if (projectName) {
+            url.searchParams.set('project', projectName);
+        } else {
+            url.searchParams.delete('project');
+        }
+        window.history.pushState({}, '', url);
+    }
+
+    function updateMdUrlParameter(mdUrl) {
+        const url = new URL(window.location.href);
+        if (mdUrl) {
+            url.searchParams.set('mdUrl', mdUrl);
+        } else {
+            url.searchParams.delete('mdUrl');
+        }
+        window.history.pushState({}, '', url);
+    }
 
     // Initialize Use Full WASM from localStorage
     const savedWasmPreference = localStorage.getItem('useFullWasm');
@@ -339,15 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function updateURLParameter(projectName) {
-        const url = new URL(window.location.href);
-        if (projectName) {
-            url.searchParams.set('project', projectName);
-        } else {
-            url.searchParams.delete('project');
-        }
-        window.history.pushState({}, '', url);
-    }
 
     function logToConsole(message) {
         const timestamp = new Date().toLocaleTimeString();
@@ -1228,6 +1243,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     logToConsole(`Project ${projectName} not found in testsets`);
                 }
             }
+
+            // Handle mdUrl permalink
+            const mdUrlParam = urlParams.get('mdUrl');
+            if (mdUrlParam) {
+                logToConsole(`Permalink detected for Markdown URL: ${mdUrlParam}`);
+                mdUrlInput.value = mdUrlParam;
+                fetchMdBtn.click();
+            }
         } catch (e) {
             console.error('Failed to fetch testsets', e);
             logToConsole('Failed to fetch testsets from GitHub');
@@ -1300,6 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const mdText = await response.text();
 
             mdChapters = parseMarkdown(mdText);
+            updateMdUrlParameter(urlRaw);
             mdTableSelect.innerHTML = '<option value="">Select a table...</option>';
 
             let tableCount = 0;
@@ -1593,12 +1617,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                         const proposedUrl = `https://github.com/${repoPath}/blob/${defaultBranch}/docs/test.md`;
                                         mdUrlInput.value = proposedUrl;
                                         logToConsole(`Proposed Markdown URL: ${proposedUrl}`);
+                                        fetchMdBtn.click();
                                     }
                                 })
                                 .catch(err => {
                                     console.error('Failed to fetch repo default branch', err);
                                     const proposedUrl = `https://github.com/${repoPath}/blob/main/docs/test.md`;
                                     mdUrlInput.value = proposedUrl;
+                                    fetchMdBtn.click();
                                 });
                         }
                     } catch (err) {
