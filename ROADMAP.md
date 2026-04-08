@@ -1,4 +1,5 @@
 # ROADMAP
+- [ ] Show 0x0 values in grey, 0xff values in dark red in the table (#169)
 - [ ] Show 0x0 values in grey, 0xff values in dark red in the table (#168)
 - [ ] Show the link to the chapter of the currently selected test case to jump to it (in a new tab/window) (#167)
 - [x] Upfating test url.aftwr chnging the.project dies not work.well.on.my mobile.phone (#165) (completed at 2026-04-08 18:38:33)
