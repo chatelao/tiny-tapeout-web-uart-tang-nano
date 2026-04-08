@@ -284,9 +284,33 @@ button:hover {
     background-color: #e46a06;
 }
 
-#runTestset:disabled {
+#runTestset:disabled, #runMdTable:disabled {
     background-color: #ffc291;
     cursor: not-allowed;
+}
+
+.md-url-input {
+    flex-grow: 1;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+#runMdTable {
+    background-color: #fd7e14;
+}
+
+#runMdTable:hover:not(:disabled) {
+    background-color: #e46a06;
+}
+
+#fetchMd {
+    background-color: #28a745;
+}
+
+#fetchMd:hover {
+    background-color: #218838;
 }
 
 #copyPermalink {

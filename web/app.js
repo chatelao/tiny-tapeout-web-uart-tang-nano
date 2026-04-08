@@ -77,6 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadTestsetBtn = document.getElementById('loadTestset');
     const runTestsetBtn = document.getElementById('runTestset');
     const copyPermalinkBtn = document.getElementById('copyPermalink');
+    const mdUrlInput = document.getElementById('mdUrl');
+    const fetchMdBtn = document.getElementById('fetchMd');
+    const mdTableSelect = document.getElementById('mdTableSelect');
+    const runMdTableBtn = document.getElementById('runMdTable');
+    const mdTableInfo = document.getElementById('mdTableInfo');
     const diagramScaling = document.getElementById('diagram-scaling');
     const diagramImg = document.getElementById('diagram-img');
     const testsetInfo = document.getElementById('testsetInfo');
@@ -745,6 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addHistoryRow(inputs, outputs, timestamp, cycleCount);
         if (!skipUpdate) updateDiagram();
+        return outputs;
     }
 
     function exportToCsv() {
@@ -1057,6 +1063,214 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     fetchTestsets();
+
+    function githubToRaw(url) {
+        if (!url) return url;
+        if (url.includes('github.com') && url.includes('/blob/')) {
+            return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+        }
+        return url;
+    }
+
+    let mdChapters = [];
+
+    function parseMarkdown(md) {
+        const lines = md.split('\n');
+        const chapters = [];
+        let currentChapter = { title: 'General', tables: [] };
+        let currentTable = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // Detect Chapters (Headers)
+            if (line.startsWith('#')) {
+                const title = line.replace(/^#+\s*/, '');
+                currentChapter = { title, tables: [] };
+                chapters.push(currentChapter);
+                continue;
+            }
+
+            // Detect Tables
+            if (line.startsWith('|') && lines[i + 1] && lines[i + 1].trim().includes('|--')) {
+                const headers = line.split('|').map(h => h.trim()).filter(h => h !== '');
+                currentTable = { headers, rows: [] };
+                i++; // Skip separator line
+                i++;
+                while (i < lines.length && lines[i].trim().startsWith('|')) {
+                    const row = lines[i].split('|').map(v => v.trim()).filter((v, idx, arr) => idx > 0 && idx < arr.length - 1);
+                    currentTable.rows.push(row);
+                    i++;
+                }
+                if (currentTable.rows.length > 0) {
+                    currentChapter.tables.push(currentTable);
+                }
+                currentTable = null;
+                i--; // Adjust for outer loop
+            }
+        }
+        return chapters;
+    }
+
+    fetchMdBtn.addEventListener('click', async () => {
+        const urlRaw = mdUrlInput.value.trim();
+        const url = githubToRaw(urlRaw);
+        if (!url) {
+            alert('Please enter a Markdown URL');
+            return;
+        }
+
+        try {
+            logToConsole(`Fetching Markdown from ${url}...`);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const mdText = await response.text();
+
+            mdChapters = parseMarkdown(mdText);
+            mdTableSelect.innerHTML = '<option value="">Select a table...</option>';
+
+            let tableCount = 0;
+            mdChapters.forEach((chapter, cIdx) => {
+                chapter.tables.forEach((table, tIdx) => {
+                    const option = document.createElement('option');
+                    option.value = `${cIdx}-${tIdx}`;
+                    option.textContent = `${chapter.title} - Table ${tIdx + 1}`;
+                    mdTableSelect.appendChild(option);
+                    tableCount++;
+                });
+            });
+
+            logToConsole(`Found ${tableCount} tables in Markdown`);
+            mdTableInfo.textContent = `Found ${tableCount} tables. Select one and click Run Table.`;
+            if (tableCount > 0) {
+                mdTableSelect.disabled = false;
+                runMdTableBtn.disabled = false;
+            }
+        } catch (e) {
+            console.error('Failed to fetch Markdown', e);
+            logToConsole('Failed to fetch Markdown');
+            mdTableInfo.textContent = 'Error loading Markdown.';
+        }
+    });
+
+    function parseCycle(cycleStr) {
+        if (cycleStr.includes('-')) {
+            const parts = cycleStr.split('-').map(p => parseInt(p.trim()));
+            return { start: parts[0], end: parts[1] };
+        }
+        return { start: parseInt(cycleStr), end: parseInt(cycleStr) };
+    }
+
+    function parseMdValue(val, cycle) {
+        val = val.trim().replace(/`/g, '');
+        if (val === '') return undefined;
+        if (val.startsWith('0x')) {
+            // Handle expressions like 0x80+cycle
+            if (val.includes('+')) {
+                const parts = val.split('+');
+                const base = parseInt(parts[0], 16);
+                if (parts[1].trim() === 'cycle') {
+                    return (base + cycle) & 0xFF;
+                }
+            }
+            return parseInt(val, 16);
+        }
+        if (!isNaN(parseInt(val))) return parseInt(val);
+        return undefined;
+    }
+
+    runMdTableBtn.addEventListener('click', async () => {
+        const selection = mdTableSelect.value;
+        if (!selection) return;
+
+        const [cIdx, tIdx] = selection.split('-').map(Number);
+        const table = mdChapters[cIdx].tables[tIdx];
+        if (!table) return;
+
+        logToConsole(`Running Markdown table: ${mdChapters[cIdx].title}`);
+        runMdTableBtn.disabled = true;
+
+        const colMap = {};
+        table.headers.forEach((h, idx) => {
+            const header = h.toLowerCase();
+            if (header.includes('ui_in')) colMap.ui_in = idx;
+            if (header.includes('uio_in')) colMap.uio_in = idx;
+            if (header.includes('uo_out')) colMap.uo_out = idx;
+            if (header.includes('uio_out')) colMap.uio_out = idx;
+            if (header.includes('uio_oe')) colMap.uio_oe = idx;
+            if (header.includes('cycle')) colMap.cycle = idx;
+        });
+
+        let lastUi = getBits(uiIn);
+        let lastUio = getBits(uioIn);
+        const rstVal = rstN.checked ? 1 : 0;
+        const enaVal = ena.checked ? 1 : 0;
+        const clkSelection = clk.value;
+
+        let passCount = 0;
+        let failCount = 0;
+        let totalChecks = 0;
+
+        for (const row of table.rows) {
+            const cycleInfo = colMap.cycle !== undefined ? parseCycle(row[colMap.cycle]) : { start: 0, end: 0 };
+
+            for (let c = cycleInfo.start; c <= cycleInfo.end; c++) {
+                const uiVal = colMap.ui_in !== undefined ? (parseMdValue(row[colMap.ui_in], c) ?? lastUi) : lastUi;
+                const uioVal = colMap.uio_in !== undefined ? (parseMdValue(row[colMap.uio_in], c) ?? lastUio) : lastUio;
+
+                lastUi = uiVal;
+                lastUio = uioVal;
+
+                let results;
+                if (clkSelection === '1/0') {
+                    await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
+                    results = await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                } else {
+                    const clkVal = parseInt(clkSelection);
+                    results = await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                }
+
+                // Verification
+                const expected = {
+                    uo_out: colMap.uo_out !== undefined ? parseMdValue(row[colMap.uo_out], c) : undefined,
+                    uio_out: colMap.uio_out !== undefined ? parseMdValue(row[colMap.uio_out], c) : undefined,
+                    uio_oe: colMap.uio_oe !== undefined ? parseMdValue(row[colMap.uio_oe], c) : undefined
+                };
+
+                let stepPassed = true;
+                let stepDetails = [];
+
+                for (const key in expected) {
+                    if (expected[key] !== undefined) {
+                        totalChecks++;
+                        if (results[key] === expected[key]) {
+                            stepDetails.push(`${key}: Match (0x${results[key].toString(16).toUpperCase().padStart(2, '0')})`);
+                        } else {
+                            stepPassed = false;
+                            stepDetails.push(`${key}: MISMATCH! Expected 0x${expected[key].toString(16).toUpperCase().padStart(2, '0')}, Got 0x${results[key].toString(16).toUpperCase().padStart(2, '0')}`);
+                        }
+                    }
+                }
+
+                if (stepDetails.length > 0) {
+                    if (stepPassed) {
+                        passCount++;
+                        logToConsole(`Cycle ${c} PASSED: ${stepDetails.join(', ')}`);
+                    } else {
+                        failCount++;
+                        logToConsole(`Cycle ${c} FAILED: ${stepDetails.join(', ')}`);
+                    }
+                }
+
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        const summary = `Execution complete. Passed: ${passCount}, Failed: ${failCount}, Total checks: ${totalChecks}`;
+        logToConsole(summary);
+        mdTableInfo.textContent = summary;
+        runMdTableBtn.disabled = false;
+    });
 
     runTestsetBtn.addEventListener('click', async () => {
         if (!currentTestset || !currentTestset.test_steps) return;
