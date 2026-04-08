@@ -618,41 +618,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal) {
         if (useFullWasm.checked && wasmReady && digitalTwin) {
             try {
-                if (typeof digitalTwin.set_ui_in === 'function') {
-                    digitalTwin.set_ui_in(uiValue);
-                }
-                if (typeof digitalTwin.set_uio_in === 'function') {
-                    digitalTwin.set_uio_in(uioInValue);
-                }
-                if (typeof digitalTwin.set_ena === 'function') {
-                    digitalTwin.set_ena(enaVal === 1);
-                }
-                if (typeof digitalTwin.set_rst_n === 'function') {
-                    digitalTwin.set_rst_n(rstVal === 1);
-                }
-                if (typeof digitalTwin.set_clk === 'function') {
-                    digitalTwin.set_clk(clkVal === 1);
-                }
+                // 1. Set input signals (excluding clock)
+                if (typeof digitalTwin.set_ui_in === 'function') digitalTwin.set_ui_in(uiValue);
+                if (typeof digitalTwin.set_uio_in === 'function') digitalTwin.set_uio_in(uioInValue);
+                if (typeof digitalTwin.set_ena === 'function') digitalTwin.set_ena(enaVal === 1);
+                if (typeof digitalTwin.set_rst_n === 'function') digitalTwin.set_rst_n(rstVal === 1);
 
-                // Advance simulation
-                if (typeof digitalTwin.eval === 'function') {
-                    digitalTwin.eval();
-                }
-                if (typeof digitalTwin.step === 'function') {
-                    // For modern DigitalTwins, step() should be called on every change
-                    // if set_clk is available. For legacy, only on rising edges.
-                    if (typeof digitalTwin.set_clk === 'function' || clkVal === 1) {
-                        digitalTwin.step();
-                    }
-                }
+                // 2. Propagate combinational changes
+                if (typeof digitalTwin.eval === 'function') digitalTwin.eval();
 
+                // 3. Read outputs BEFORE the clock edge.
+                // This ensures we see the state relevant to the current transaction's inputs,
+                // matching the "Cycle N" expectations of most test protocols.
                 const res = {
                     source: 'WASM',
                     uo_out: typeof digitalTwin.get_uo_out === 'function' ? digitalTwin.get_uo_out() : 0,
                     uio_out: typeof digitalTwin.get_uio_out === 'function' ? digitalTwin.get_uio_out() : 0,
                     uio_oe: typeof digitalTwin.get_uio_oe === 'function' ? digitalTwin.get_uio_oe() : 0
                 };
-                console.log(`mockBoard results from WASM: ${JSON.stringify(res)}`);
+
+                // 4. Apply clock edge and advance simulation
+                if (typeof digitalTwin.set_clk === 'function') {
+                    // Modern interface: use set_clk + eval for cycle-accurate simulation
+                    digitalTwin.set_clk(clkVal === 1);
+                    if (typeof digitalTwin.eval === 'function') digitalTwin.eval();
+                } else if (clkVal === 1 && typeof digitalTwin.step === 'function') {
+                    // Legacy interface: step() is typically a full toggle or rising edge trigger
+                    digitalTwin.step();
+                }
+
+                console.log(`mockBoard results from WASM (read before edge): ${JSON.stringify(res)}`);
                 return res;
             } catch (e) {
                 console.error("Error in WASM mockBoard:", e);
@@ -683,9 +678,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
         const timestamp = new Date().toLocaleTimeString();
 
+        const oldClkVal = historyData.length > 0 ? historyData[historyData.length - 1].clk : 0;
+        const currentCycle = cycleCount;
+
         if (rstVal === 0) {
             cycleCount = 0;
-        } else if (clkVal === 1) {
+        } else if (oldClkVal === 0 && clkVal === 1) {
             cycleCount++;
         }
 
@@ -743,12 +741,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         historyData.push({
             time: timestamp,
-            cycle: cycleCount,
+            cycle: currentCycle,
             ...inputs,
             ...outputs
         });
 
-        addHistoryRow(inputs, outputs, timestamp, cycleCount);
+        addHistoryRow(inputs, outputs, timestamp, currentCycle);
         if (!skipUpdate) updateDiagram();
         return outputs;
     }
@@ -956,11 +954,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (digitalTwin) {
             try {
                 // Perform a hard reset in simulation
-                digitalTwin.set_rst_n(false);
-                digitalTwin.step();
-                digitalTwin.step();
-                digitalTwin.set_rst_n(true);
-                digitalTwin.step();
+                if (typeof digitalTwin.set_rst_n === 'function') {
+                    // Ensure inputs are zeroed during reset to avoid accidental mode capture
+                    if (typeof digitalTwin.set_ui_in === 'function') digitalTwin.set_ui_in(0);
+                    if (typeof digitalTwin.set_uio_in === 'function') digitalTwin.set_uio_in(0);
+
+                    digitalTwin.set_rst_n(0);
+                    if (typeof digitalTwin.eval === 'function') digitalTwin.eval();
+
+                    // Pulse the clock while reset is active to ensure synchronous reset
+                    if (typeof digitalTwin.set_clk === 'function') {
+                        digitalTwin.set_clk(1);
+                        if (typeof digitalTwin.eval === 'function') digitalTwin.eval();
+                        digitalTwin.set_clk(0);
+                        if (typeof digitalTwin.eval === 'function') digitalTwin.eval();
+                    } else if (typeof digitalTwin.step === 'function') {
+                        digitalTwin.step();
+                    }
+
+                    digitalTwin.set_rst_n(1);
+                    if (typeof digitalTwin.eval === 'function') digitalTwin.eval();
+                } else {
+                    // Legacy reset
+                    digitalTwin.set_rst_n(false);
+                    digitalTwin.step();
+                    digitalTwin.step();
+                    digitalTwin.set_rst_n(true);
+                }
                 logToConsole('Simulation state reset');
             } catch (e) {
                 console.error('Failed to reset DigitalTwin', e);
@@ -1223,8 +1243,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let results;
                 if (clkSelection === '1/0') {
-                    await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
-                    results = await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                    results = await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
                 } else {
                     const clkVal = parseInt(clkSelection);
                     results = await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
