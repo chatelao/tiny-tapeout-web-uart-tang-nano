@@ -2,124 +2,46 @@
 
 This document analyzes the failures encountered when running the Markdown test cases from `TEST_CASES.md` against the `tt3990` (OCP MXFP8 Streaming MAC Unit) WASM simulation engine.
 
-## FP8 Dot Product (Standard Protocol) - Table 1
-### Analysis
-- Cycles 1-2: `uo_out` returns `0x7F` instead of `0x00`. Since `ui_in` is `0x7F` (Scale A), it seems the module is echoing the input during the LOAD state or hasn't transitioned yet.
-- Cycle 39: Expected `0x20`, Got `0x00`. The result byte is missing or delayed.
+## Root Cause Analysis
 
-### Failure Logs
-- Cycle 1 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x7F, uio_out: Match (0x00)
-- Cycle 2 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x7F, uio_out: Match (0x00)
-- Cycle 39 FAILED: uo_out: MISMATCH! Expected 0x20, Got 0x00, uio_out: Match (0x00)
+After investigating the Verilog source code and the simulation environment, two primary issues were identified that cause nearly all failures:
 
-## FP4 Fast Lane (Short Protocol) - Table 1
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0xC4, uio_out: Match (0x00)
+### 1. Simulation Phase Shift (Reset Sequence Bug)
+The reset functionality in the web tester (`web/app.js`) contains a logic error in its sequence:
+```javascript
+digitalTwin.set_rst_n(false);
+digitalTwin.step();
+digitalTwin.step();
+digitalTwin.set_rst_n(true);
+digitalTwin.step(); // <--- This step causes the issue
+```
+The final `step()` call after releasing reset (`rst_n=true`) causes the internal `cycle_count` register in the WASM module to increment from **0 to 1**. Consequently, when the test runner begins its "Cycle 0" transaction, the hardware is already at **Cycle 1**. This creates a persistent one-cycle phase shift for the entire test run.
 
-## Debug Mode: 0x0 (Default) - Table 1
-### Failure Logs
-- Cycle 23 FAILED: uo_out: MISMATCH! Expected 0x20, Got 0x00, uio_out: Match (0x00)
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x40, uio_out: Match (0x00)
+### 2. Accidental Metadata Capture & Loopback Mode
+The `tt3990` project captures protocol metadata (like `debug_en` and `loopback_en`) strictly at `logical_cycle == 0`.
+- Because the hardware is at Cycle 1 when the test's "Cycle 0" data arrives, the intended metadata is **ignored**.
+- Instead, the hardware captures whatever values were on the input pins during the faulty reset `step()`.
+- If `ui_in[5]` was high during that moment, the module enters **Loopback Mode**, where `uo_out = ui_in ^ uio_in`.
 
-## Debug Mode: 0x1 (FSM State & Timing) - Table 1
-### Analysis
-- The module is returning `0x00` instead of the expected state/cycle information. This suggests the Debug Probe for 0x1 is either not active or not implemented as expected in this WASM version.
+---
 
-### Failure Logs
-- Cycle 1 FAILED: uo_out: MISMATCH! Expected 0x41, Got 0x00, uio_out: Match (0x00)
-- Cycle 2 FAILED: uo_out: MISMATCH! Expected 0x42, Got 0x00, uio_out: Match (0x00)
-- Cycle 3 FAILED: uo_out: MISMATCH! Expected 0x83, Got 0x00, uio_out: Match (0x00)
+## Failure Details
 
-## Debug Mode: 0x2 (Exception Monitor) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
+### FP8 Dot Product (Standard Protocol)
+- **Cycle 1-2 Mismatch:**
+  - **Expected:** `uo_out = 0x00`
+  - **Observed:** `uo_out = 0x7F` (matches `ui_in`)
+  - **Reason:** The module is in Loopback Mode due to the metadata capture issue. It is mirroring `ui_in` directly to `uo_out`.
+- **Cycle 39 Mismatch:**
+  - **Expected:** `uo_out = 0x20` (Result Byte 1)
+  - **Observed:** `uo_out = 0x00`
+  - **Reason:** Due to the one-cycle phase shift, the hardware is actually at Cycle 40. According to the protocol, Cycle 40 returns Result Byte 0 (`0x00`).
 
-### Failure Logs
-- Cycle 5 FAILED: uo_out: MISMATCH! Expected 0x85, Got 0x00, uio_out: Match (0x00)
-- Cycle 6 FAILED: uo_out: MISMATCH! Expected 0x86, Got 0x00, uio_out: Match (0x00)
-- Cycle 7 FAILED: uo_out: MISMATCH! Expected 0x87, Got 0x00, uio_out: Match (0x00)
-- Cycle 8 FAILED: uo_out: MISMATCH! Expected 0x88, Got 0x00, uio_out: Match (0x00)
-- Cycle 9 FAILED: uo_out: MISMATCH! Expected 0x89, Got 0x00, uio_out: Match (0x00)
-- Cycle 10 FAILED: uo_out: MISMATCH! Expected 0x8A, Got 0x00, uio_out: Match (0x00)
-- Cycle 11 FAILED: uo_out: MISMATCH! Expected 0x8B, Got 0x00, uio_out: Match (0x00)
-- Cycle 12 FAILED: uo_out: MISMATCH! Expected 0x8C, Got 0x00, uio_out: Match (0x00)
-- Cycle 13 FAILED: uo_out: MISMATCH! Expected 0x8D, Got 0x00, uio_out: Match (0x00)
-- Cycle 14 FAILED: uo_out: MISMATCH! Expected 0x8E, Got 0x00, uio_out: Match (0x00)
-- Cycle 15 FAILED: uo_out: MISMATCH! Expected 0x8F, Got 0x00, uio_out: Match (0x00)
-- Cycle 16 FAILED: uo_out: MISMATCH! Expected 0x90, Got 0x00, uio_out: Match (0x00)
-- Cycle 17 FAILED: uo_out: MISMATCH! Expected 0x91, Got 0x00, uio_out: Match (0x00)
-- Cycle 18 FAILED: uo_out: MISMATCH! Expected 0x92, Got 0x7F, uio_out: Match (0x00)
-- Cycle 19 FAILED: uo_out: MISMATCH! Expected 0x93, Got 0xC0, uio_out: Match (0x00)
-- Cycle 20 FAILED: uo_out: MISMATCH! Expected 0x94, Got 0x00, uio_out: Match (0x00)
-- Cycle 21 FAILED: uo_out: MISMATCH! Expected 0x95, Got 0x00, uio_out: Match (0x00)
-- Cycle 22 FAILED: uo_out: MISMATCH! Expected 0x96, Got 0x00, uio_out: Match (0x00)
-- Cycle 23 FAILED: uo_out: MISMATCH! Expected 0x97, Got 0x00, uio_out: Match (0x00)
-- Cycle 24 FAILED: uo_out: MISMATCH! Expected 0x98, Got 0x00, uio_out: Match (0x00)
-- Cycle 25 FAILED: uo_out: MISMATCH! Expected 0x99, Got 0x00, uio_out: Match (0x00)
-- Cycle 26 FAILED: uo_out: MISMATCH! Expected 0x9A, Got 0x00, uio_out: Match (0x00)
-- Cycle 27 FAILED: uo_out: MISMATCH! Expected 0x9B, Got 0x00, uio_out: Match (0x00)
-- Cycle 28 FAILED: uo_out: MISMATCH! Expected 0x9C, Got 0x00, uio_out: Match (0x00)
-- Cycle 29 FAILED: uo_out: MISMATCH! Expected 0x9D, Got 0x00, uio_out: Match (0x00)
-- Cycle 30 FAILED: uo_out: MISMATCH! Expected 0x9E, Got 0x00, uio_out: Match (0x00)
-- Cycle 31 FAILED: uo_out: MISMATCH! Expected 0x9F, Got 0x00, uio_out: Match (0x00)
-- Cycle 32 FAILED: uo_out: MISMATCH! Expected 0xA0, Got 0x00, uio_out: Match (0x00)
-- Cycle 33 FAILED: uo_out: MISMATCH! Expected 0xA1, Got 0x00, uio_out: Match (0x00)
-- Cycle 34 FAILED: uo_out: MISMATCH! Expected 0xA2, Got 0x00, uio_out: Match (0x00)
-- Cycle 36 FAILED: uo_out: MISMATCH! Expected 0xA4, Got 0x00, uio_out: Match (0x00)
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x10, Got 0x42, uio_out: Match (0x00)
-- Cycle 3 FAILED: uo_out: MISMATCH! Expected 0x90, Got 0x47, uio_out: Match (0x00)
+### Debug Mode Tests
+- **All Debug Tables:** Most failures show `uo_out` echoing `ui_in` or `uio_in`.
+- **Reason:** Since Cycle 0 (where `debug_en` is sent) was skipped by the hardware, the debug probes are never actually enabled. The module remains in Loopback Mode (or Default mode), returning loopback values or zeros instead of internal probe data.
 
-## Debug Mode: 0x3 (Accumulator [31:24]) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
+---
 
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x43, uio_out: Match (0x00)
-
-## Debug Mode: 0x4 (Accumulator [23:16]) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
-
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x44, uio_out: Match (0x00)
-
-## Debug Mode: 0x5 (Accumulator [15:8]) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
-
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x45, uio_out: Match (0x00)
-
-## Debug Mode: 0x6 (Accumulator [7:0]) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
-
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x46, uio_out: Match (0x00)
-
-## Debug Mode: 0x7 (Multiplier Lane 0 [15:8]) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
-
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x47, uio_out: Match (0x00)
-
-## Debug Mode: 0x8 (Multiplier Lane 0 [7:0]) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
-
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x48, uio_out: Match (0x00)
-
-## Debug Mode: 0x9 (Control Signals) - Table 1
-### Analysis
-- Cycle 0 often fails with `Got 0x4[X]` where `X` is the probe selector. The module seems to be echoing `ui_in` or `uio_in` immediately upon debug enable.
-
-### Failure Logs
-- Cycle 0 FAILED: uo_out: MISMATCH! Expected 0x00, Got 0x49, uio_out: Match (0x00)
-- Cycle 1 FAILED: uo_out: MISMATCH! Expected 0xD0, Got 0x7F, uio_out: Match (0x00)
-- Cycle 2 FAILED: uo_out: MISMATCH! Expected 0xD0, Got 0x7F, uio_out: Match (0x00)
-- Cycle 4 FAILED: uo_out: MISMATCH! Expected 0xE0, Got 0x00, uio_out: Match (0x00)
-- Cycle 5 FAILED: uo_out: MISMATCH! Expected 0xE0, Got 0x00, uio_out: Match (0x00)
-- Cycle 6 FAILED: uo_out: MISMATCH! Expected 0xE0, Got 0x00, uio_out: Match (0x00)
-- Cycle 7 FAILED: uo_out: MISMATCH! Expected 0xE0, Got 0x00, uio_out: Match (0x00)
+## Conclusion
+The logic of the OCP MXFP8 MAC unit appears correct. The failures are artifacts of the **integration between the Web Tester and the WASM module**, specifically regarding the reset-to-start synchronization.
