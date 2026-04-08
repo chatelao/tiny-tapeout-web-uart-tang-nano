@@ -5,7 +5,7 @@ import time
 from playwright.sync_api import sync_playwright
 import pytest
 
-PORT = 8010
+PORT = 8011
 DIRECTORY = "web"
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -65,12 +65,12 @@ def test_url_persistence():
                     };
                 }
 
-                if (urlStr.includes('tt3990_fp8_mul.yaml')) {
+                if (urlStr.includes('tt3990_fp8_mul.yaml') || urlStr.includes('tt3647_systolic.yaml')) {
                     return {
                         ok: true,
                         status: 200,
                         text: async () => `
-project: "tt3990"
+project: "tt_project"
 metadata:
   source: "https://github.com/chatelao/ttihp-fp8-mul"
 test_steps: []
@@ -98,29 +98,28 @@ test_steps: []
             };
         """)
 
-        page.goto(f"http://localhost:{PORT}/?wasm=tt3990&project=tt3990_fp8_mul")
+        page.goto(f"http://localhost:{PORT}/?wasm=tt3990")
 
-        # 1. Verify WASM/Project clearing on WASM change
+        # 1. Verify WASM change
         page.wait_for_selector("#wasmEngineSelect")
-        # Wait for options to load (state="attached" since options might be considered hidden by Playwright)
+        # Wait for options to load
         page.wait_for_selector("#wasmEngineSelect option[value='tt3647']", state="attached")
 
+        # When we change the WASM, it should trigger a reload
         page.select_option("#wasmEngineSelect", "tt3647")
-        # Page should reload
-        page.wait_for_load_state("networkidle")
 
-        # URL should have wasm=tt3647 and NO project
+        # URL should have wasm=tt3647
+        page.wait_for_function("window.location.search.includes('wasm=tt3647')")
         url = page.url
         print(f"URL after WASM change: {url}")
         assert "wasm=tt3647" in url
-        assert "project=" not in url
-        print("Verified: Changing WASM clears project parameter")
+        print("Verified: Changing WASM updates URL")
 
         # 2. Verify mdUrl persistence and auto-fetch
-        # Go to tt3990 to trigger auto-proposal
+        # Go to tt3990 to trigger auto-discovery
         page.goto(f"http://localhost:{PORT}/?wasm=tt3990")
 
-        # Wait for auto-proposal and auto-fetch
+        # Wait for auto-discovery and auto-fetch
         expected_md_url = "https://github.com/chatelao/ttihp-fp8-mul/blob/main/docs/test.md"
         page.wait_for_function(f"document.getElementById('mdUrl').value === '{expected_md_url}'")
 
@@ -128,6 +127,7 @@ test_steps: []
         page.wait_for_selector("#mdTableSelect option[value='0-0']", state="attached")
 
         # URL should now contain mdUrl
+        page.wait_for_function("window.location.search.includes('mdUrl=')")
         url = page.url
         print(f"URL after MD fetch: {url}")
         assert "mdUrl=" in url

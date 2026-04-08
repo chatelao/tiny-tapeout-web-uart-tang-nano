@@ -250,49 +250,6 @@ button:hover {
     background-color: #a71d2a;
 }
 
-.testset-panel h2 {
-    margin-top: 0;
-    font-size: 1.1rem;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 8px;
-}
-
-.testset-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    align-items: center;
-}
-
-#testsetSelect {
-    flex-grow: 1;
-    padding: 6px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-#loadTestset {
-    background-color: #28a745;
-}
-
-#loadTestset:hover {
-    background-color: #218838;
-}
-
-#runTestset {
-    background-color: #fd7e14;
-}
-
-#runTestset:hover {
-    background-color: #e46a06;
-}
-
-#runTestset:disabled, #runMdTable:disabled {
-    background-color: #ffc291;
-    cursor: not-allowed;
-}
-
 .md-url-input {
     flex-grow: 1;
     padding: 6px;
@@ -309,29 +266,17 @@ button:hover {
     background-color: #e46a06;
 }
 
+#runMdTable:disabled {
+    background-color: #ffc291;
+    cursor: not-allowed;
+}
+
 #fetchMd {
     background-color: #28a745;
 }
 
 #fetchMd:hover {
     background-color: #218838;
-}
-
-#copyPermalink {
-    background-color: #6c757d;
-}
-
-#copyPermalink:hover {
-    background-color: #5a6268;
-}
-
-.testset-info {
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    line-height: 1.4;
-    border: 1px solid #eee;
 }
 
 .serial-controls {
@@ -525,13 +470,13 @@ button:disabled {
         padding: 15px;
     }
 
-    .table-actions, .testset-actions, .flasher-controls, .serial-controls {
+    .table-actions, .flasher-controls, .serial-controls {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
     }
 
-    .table-actions button, .testset-actions button, .testset-actions select, .flasher-controls button, .serial-controls button {
+    .table-actions button, .flasher-controls button, .serial-controls button {
         width: 100%;
         padding: 10px;
     }
