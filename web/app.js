@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sweepInputsBtn = document.getElementById('sweepInputs');
     const randomInputBtn = document.getElementById('randomInput');
     const sendReceiveBtn = document.getElementById('sendReceive');
+    const replayBtn = document.getElementById('replayBtn');
     const exportCsvBtn = document.getElementById('exportCsv');
     const importCsvBtn = document.getElementById('importCsv');
     const importCsvFile = document.getElementById('importCsvFile');
@@ -928,6 +929,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const clkVal = parseInt(clkSelection);
             await performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal);
         }
+    });
+
+    replayBtn.addEventListener('click', async () => {
+        if (historyData.length === 0) {
+            logToConsole("Nothing to replay.");
+            return;
+        }
+
+        replayBtn.disabled = true;
+        logToConsole(`Replaying ${historyData.length} transactions...`);
+
+        // Clone history to avoid issues during iteration as performTransaction pushes to it
+        const snapshot = [...historyData];
+
+        for (let i = 0; i < snapshot.length; i++) {
+            const entry = snapshot[i];
+            await performTransaction(
+                entry.ui_in,
+                entry.uio_in,
+                entry.clk,
+                entry.rst_n,
+                entry.ena,
+                true // skipUpdate
+            );
+
+            // Yield to main thread every 10 transactions
+            if (i % 10 === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        updateDiagram();
+        logToConsole("Replay complete.");
+        replayBtn.disabled = false;
     });
 
     sweepInputsBtn.addEventListener('click', async () => {
