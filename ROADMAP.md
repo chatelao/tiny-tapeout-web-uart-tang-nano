@@ -1,4 +1,5 @@
 # ROADMAP
+- [ ] Upfating test url.aftwr chnging the.project dies not work.well.on.my mobile.phone (#165)
 - [ ] Add "Replay" button (#163)
 - [x] gh pages - test.md - Allow for Column type to be added in paraenthesis "(...)" behind the column names, switch the type of the result and timing view accordingly (#161) (completed at 2026-04-08 16:22:02)
 - [x] Add to all columens the same dropdown of the format like in the timing diagramm and display the "read only" columns accordingly (#159) (completed at 2026-04-08 14:14:43)
