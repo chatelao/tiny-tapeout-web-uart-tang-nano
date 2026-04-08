@@ -13,6 +13,7 @@
 
         <nav class="nav-tabs">
             <a href="index.html" class="nav-link active">Web Tester</a>
+            <a href="projects.html" class="nav-link">Projects</a>
             <a href="flasher.html" class="nav-link">SRAM Flasher</a>
         </nav>
 
@@ -25,6 +26,7 @@
                 <button id="randomInput">Random</button>
                 <button id="sendReceive">Send</button>
                 <button id="replayBtn">Replay</button>
+                <button id="runTestset" disabled>Run Testset</button>
                 <button id="clearData">Reset</button>
             </div>
             <div class="table-responsive">
@@ -175,9 +177,12 @@
                 </tbody>
             </table>
             </div>
+            <div id="projectInfo" class="testset-info" style="margin-bottom: 15px; display: none;"></div>
+
             <div class="serial-controls">
                 <button id="connectBtn">Connect</button>
                 <span id="statusLabel">Simulation Mode</span>
+                <button id="selectProjectBtn" onclick="window.location.href='projects.html'">Select Project</button>
                 <div class="wasm-controls">
                     <select id="wasmEngineSelect">
                         <option value="default">Default (Built-in)</option>
@@ -186,6 +191,7 @@
                         <input type="checkbox" id="useFullWasm"> Use WASM Simulation
                     </label>
                 </div>
+                <button id="copyPermalink">Permalink</button>
             </div>
         </div>
 
@@ -322,20 +328,6 @@
             <div id="console" class="console"></div>
         </div>
 
-        <div class="panel testset-panel">
-            <h2>Testset Framework</h2>
-            <div class="testset-actions">
-                <select id="testsetSelect">
-                    <option value="">Loading testsets...</option>
-                </select>
-                <button id="loadTestset">Load</button>
-                <button id="runTestset" disabled>Run Testset</button>
-                <button id="copyPermalink">Copy Permalink</button>
-            </div>
-            <div id="testsetInfo" class="testset-info">
-                No testset loaded.
-            </div>
-        </div>
     </div>
     <script src="app.js"></script>
 </body>

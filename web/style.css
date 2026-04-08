@@ -463,6 +463,20 @@ button:disabled {
     font-size: 0.85rem;
 }
 
+#projectSearch {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+}
+
+#projectsTable th {
+    cursor: default;
+}
+
+#projectsTable td {
+    vertical-align: middle;
+}
+
 #diagram-container {
     overflow-x: auto;
     text-align: center;
