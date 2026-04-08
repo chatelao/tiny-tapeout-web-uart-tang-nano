@@ -1,6 +1,6 @@
 # ROADMAP
 - [ ] Update gh pages to show all projects available in tt-test-framework (#173)
-- [ ] Remove the "Testset Framework" from the gh pages (#171)
+- [x] Remove the "Testset Framework" from the gh pages (#171) (completed at 2026-04-08 19:16:42)
 - [x] Show 0x0 values in grey, 0xff values in dark red in the table (#169) (completed at 2026-04-08 19:02:14)
 - [ ] Show 0x0 values in grey, 0xff values in dark red in the table (#168)
 - [x] Show the link to the chapter of the currently selected test case to jump to it (in a new tab/window) (#167) (completed at 2026-04-08 18:51:54)
