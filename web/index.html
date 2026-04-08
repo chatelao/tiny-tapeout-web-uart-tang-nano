@@ -30,32 +30,108 @@
             <table class="tester-table">
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Cycle</th>
-                        <th>ui_in [7:0]</th>
-                        <th class="col-uio_in">
-                            <input type="checkbox" id="toggle-uio_in" checked title="Toggle uio_in visibility">
-                            uio_in [7:0]
+                        <th class="col-time">Time</th>
+                        <th class="col-cycle">
+                            Cycle
+                            <select id="table-type-cycle" class="table-type">
+                                <option value="dec" selected>Dec</option>
+                                <option value="hex">Hex</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
                         </th>
-                        <th>clk</th>
-                        <th>rst_n</th>
-                        <th>ena</th>
-                        <th>uo_out [7:0]</th>
+                        <th class="col-ui_in">
+                            ui_in [7:0]
+                            <select id="table-type-ui_in" class="table-type">
+                                <option value="hex" selected>Hex</option>
+                                <option value="dec">Dec</option>
+                                <option value="bin">Bin</option>
+                                <option value="bits">Bits</option>
+                                <option value="fp8_e4m3">FP8 (E4M3)</option>
+                                <option value="fp8_e3m4">FP8 (E3M4)</option>
+                                <option value="dual_fp4">Dual FP4</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
+                        </th>
+                        <th class="col-uio_in">
+                            uio_in [7:0]
+                            <select id="table-type-uio_in" class="table-type">
+                                <option value="hex" selected>Hex</option>
+                                <option value="dec">Dec</option>
+                                <option value="bin">Bin</option>
+                                <option value="bits">Bits</option>
+                                <option value="fp8_e4m3">FP8 (E4M3)</option>
+                                <option value="fp8_e3m4">FP8 (E3M4)</option>
+                                <option value="dual_fp4">Dual FP4</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
+                        </th>
+                        <th class="col-clk">
+                            clk
+                            <select id="table-type-clk" class="table-type">
+                                <option value="binary" selected>Show</option>
+                                <option value="hidden">Hide</option>
+                            </select>
+                        </th>
+                        <th class="col-rst_n">
+                            rst_n
+                            <select id="table-type-rst_n" class="table-type">
+                                <option value="binary" selected>Show</option>
+                                <option value="hidden">Hide</option>
+                            </select>
+                        </th>
+                        <th class="col-ena">
+                            ena
+                            <select id="table-type-ena" class="table-type">
+                                <option value="binary" selected>Show</option>
+                                <option value="hidden">Hide</option>
+                            </select>
+                        </th>
+                        <th class="col-uo_out">
+                            uo_out [7:0]
+                            <select id="table-type-uo_out" class="table-type">
+                                <option value="hex" selected>Hex</option>
+                                <option value="dec">Dec</option>
+                                <option value="bin">Bin</option>
+                                <option value="bits">Bits</option>
+                                <option value="fp8_e4m3">FP8 (E4M3)</option>
+                                <option value="fp8_e3m4">FP8 (E3M4)</option>
+                                <option value="dual_fp4">Dual FP4</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
+                        </th>
                         <th class="col-uio_out">
-                            <input type="checkbox" id="toggle-uio_out" checked title="Toggle uio_out visibility">
                             uio_out [7:0]
+                            <select id="table-type-uio_out" class="table-type">
+                                <option value="hex" selected>Hex</option>
+                                <option value="dec">Dec</option>
+                                <option value="bin">Bin</option>
+                                <option value="bits">Bits</option>
+                                <option value="fp8_e4m3">FP8 (E4M3)</option>
+                                <option value="fp8_e3m4">FP8 (E3M4)</option>
+                                <option value="dual_fp4">Dual FP4</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
                         </th>
                         <th class="col-uio_oe">
-                            <input type="checkbox" id="toggle-uio_oe" checked title="Toggle uio_oe visibility">
                             uio_oe [7:0]
+                            <select id="table-type-uio_oe" class="table-type">
+                                <option value="hex" selected>Hex</option>
+                                <option value="dec">Dec</option>
+                                <option value="bin">Bin</option>
+                                <option value="bits">Bits</option>
+                                <option value="fp8_e4m3">FP8 (E4M3)</option>
+                                <option value="fp8_e3m4">FP8 (E3M4)</option>
+                                <option value="dual_fp4">Dual FP4</option>
+                                <option value="hidden">Hidden</option>
+                            </select>
                         </th>
                     </tr>
                 </thead>
                 <tbody class="input-section">
                     <tr class="input-row">
-                        <td class="time-cell">-</td>
-                        <td class="time-cell">-</td>
-                        <td>
+                        <td class="col-time time-cell">-</td>
+                        <td class="col-cycle time-cell">-</td>
+                        <td class="col-ui_in">
                             <div class="bits-container">
                                 <div class="bits" id="ui_in">
                                     <input type="checkbox" title="7"><input type="checkbox" title="6"><input type="checkbox" title="5"><input type="checkbox" title="4"><input type="checkbox" title="3"><input type="checkbox" title="2"><input type="checkbox" title="1"><input type="checkbox" title="0">
@@ -79,18 +155,18 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="center-cell">
+                        <td class="col-clk center-cell">
                             <select id="clk">
                                 <option value="0">0</option>
                                 <option value="1">1</option>
                                 <option value="1/0" selected>1/0</option>
                             </select>
                         </td>
-                        <td class="center-cell"><input type="checkbox" id="rst_n" checked></td>
-                        <td class="center-cell"><input type="checkbox" id="ena" checked></td>
-                        <td class="results-placeholder">Ready to send...</td>
-                        <td class="col-uio_out results-placeholder"></td>
-                        <td class="col-uio_oe results-placeholder"></td>
+                        <td class="col-rst_n center-cell"><input type="checkbox" id="rst_n" checked></td>
+                        <td class="col-ena center-cell"><input type="checkbox" id="ena" checked></td>
+                        <td class="col-uo_out results-placeholder" id="uo_out_result">Ready to send...</td>
+                        <td class="col-uio_out results-placeholder" id="uio_out_result"></td>
+                        <td class="col-uio_oe results-placeholder" id="uio_oe_result"></td>
                     </tr>
                 </tbody>
                 <tbody id="history">
@@ -120,7 +196,7 @@
             </div>
             <div class="testset-actions">
                 <select id="mdTableSelect">
-                    <option value="">No tables loaded...</option>
+                    <option value="">Select a table...</option>
                 </select>
                 <button id="runMdTable" disabled>Run Table</button>
             </div>
@@ -147,7 +223,8 @@
                         <option value="dec">Dec</option>
                         <option value="bin">Bin</option>
                         <option value="bits">Bits</option>
-                        <option value="fp8">FP8</option>
+                        <option value="fp8_e4m3">FP8 (E4M3)</option>
+                        <option value="fp8_e3m4">FP8 (E3M4)</option>
                         <option value="dual_fp4">Dual FP4</option>
                         <option value="hidden">Hidden</option>
                     </select>
@@ -159,7 +236,8 @@
                         <option value="dec">Dec</option>
                         <option value="bin">Bin</option>
                         <option value="bits">Bits</option>
-                        <option value="fp8">FP8</option>
+                        <option value="fp8_e4m3">FP8 (E4M3)</option>
+                        <option value="fp8_e3m4">FP8 (E3M4)</option>
                         <option value="dual_fp4">Dual FP4</option>
                         <option value="hidden">Hidden</option>
                     </select>
@@ -192,7 +270,8 @@
                         <option value="dec">Dec</option>
                         <option value="bin">Bin</option>
                         <option value="bits">Bits</option>
-                        <option value="fp8">FP8</option>
+                        <option value="fp8_e4m3">FP8 (E4M3)</option>
+                        <option value="fp8_e3m4">FP8 (E3M4)</option>
                         <option value="dual_fp4">Dual FP4</option>
                         <option value="hidden">Hidden</option>
                     </select>
@@ -204,7 +283,8 @@
                         <option value="dec">Dec</option>
                         <option value="bin">Bin</option>
                         <option value="bits">Bits</option>
-                        <option value="fp8">FP8</option>
+                        <option value="fp8_e4m3">FP8 (E4M3)</option>
+                        <option value="fp8_e3m4">FP8 (E3M4)</option>
                         <option value="dual_fp4">Dual FP4</option>
                         <option value="hidden">Hidden</option>
                     </select>
@@ -216,7 +296,8 @@
                         <option value="dec">Dec</option>
                         <option value="bin">Bin</option>
                         <option value="bits">Bits</option>
-                        <option value="fp8">FP8</option>
+                        <option value="fp8_e4m3">FP8 (E4M3)</option>
+                        <option value="fp8_e3m4">FP8 (E3M4)</option>
                         <option value="dual_fp4">Dual FP4</option>
                         <option value="hidden">Hidden</option>
                     </select>
