@@ -74,10 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const importCsvBtn = document.getElementById('importCsv');
     const importCsvFile = document.getElementById('importCsvFile');
     const clearDataBtn = document.getElementById('clearData');
-    const testsetSelect = document.getElementById('testsetSelect');
-    const loadTestsetBtn = document.getElementById('loadTestset');
-    const runTestsetBtn = document.getElementById('runTestset');
-    const copyPermalinkBtn = document.getElementById('copyPermalink');
     const mdUrlInput = document.getElementById('mdUrl');
     const fetchMdBtn = document.getElementById('fetchMd');
     const mdTableSelect = document.getElementById('mdTableSelect');
@@ -86,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mdJumpToLink = document.getElementById('mdJumpToLink');
     const diagramScaling = document.getElementById('diagram-scaling');
     const diagramImg = document.getElementById('diagram-img');
-    const testsetInfo = document.getElementById('testsetInfo');
     const historyBody = document.getElementById('history');
     const consoleDiv = document.getElementById('console');
     const testerTable = document.querySelector('.tester-table');
@@ -105,9 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wasmEngineSelect.addEventListener('change', () => {
         const url = new URL(window.location.href);
         const selectedWasm = wasmEngineSelect.value;
-        // When switching WASM, clear the project param to avoid mismatch and force auto-discovery
-        url.searchParams.delete('project');
-        // Clear mdUrl too as it's likely project-specific
+        // When switching WASM, clear mdUrl as it's likely project-specific
         url.searchParams.delete('mdUrl');
         if (selectedWasm === 'default') {
             url.searchParams.delete('wasm');
@@ -116,16 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.location.href = url.toString();
     });
-
-    function updateURLParameter(projectName) {
-        const url = new URL(window.location.href);
-        if (projectName) {
-            url.searchParams.set('project', projectName);
-        } else {
-            url.searchParams.delete('project');
-        }
-        window.history.pushState({}, '', url);
-    }
 
     function updateMdUrlParameter(mdUrl) {
         const url = new URL(window.location.href);
@@ -253,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const historyData = [];
-    let currentTestset = null;
     let cycleCount = 0;
 
     function formatValue(value, type, channel) {
@@ -1158,15 +1140,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logToConsole('History and console cleared');
     });
 
-    copyPermalinkBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            logToConsole('Permalink copied to clipboard');
-        }).catch(err => {
-            console.error('Failed to copy permalink', err);
-            logToConsole('Failed to copy permalink');
-        });
-    });
-
     async function fetchWasmEngines() {
         try {
             logToConsole('Fetching WASM engines and project titles from GitHub...');
@@ -1212,47 +1185,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchWasmEngines();
 
-    async function fetchTestsets() {
+    async function discoverMdUrl() {
         try {
-            const response = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const files = await response.json();
-
-            const yamlFiles = files.filter(file => file.name.endsWith('.yaml'));
-
-            testsetSelect.innerHTML = '<option value="">Select a testset...</option>';
-            yamlFiles.forEach(file => {
-                const option = document.createElement('option');
-                option.value = file.download_url;
-                option.textContent = file.name;
-                testsetSelect.appendChild(option);
-            });
-            logToConsole(`Fetched ${yamlFiles.length} testsets from GitHub`);
-
-            // Handle permalink
             const urlParams = new URLSearchParams(window.location.search);
-            let projectName = urlParams.get('project');
             const wasmName = urlParams.get('wasm');
 
-            if (!projectName && wasmName && wasmName !== 'default') {
-                // Try to find a testset starting with the wasm project ID (e.g. tt3990)
-                const options = Array.from(testsetSelect.options);
-                const targetOption = options.find(opt => opt.textContent.startsWith(wasmName));
-                if (targetOption) {
-                    projectName = targetOption.textContent.replace('.yaml', '');
-                    logToConsole(`Auto-loading testset for WASM engine: ${wasmName}`);
-                }
-            }
+            if (wasmName && wasmName !== 'default') {
+                const response = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const files = await response.json();
 
-            if (projectName) {
-                logToConsole(`Permalink detected for project: ${projectName}`);
-                const options = Array.from(testsetSelect.options);
-                const targetOption = options.find(opt => opt.textContent === `${projectName}.yaml`);
-                if (targetOption) {
-                    testsetSelect.value = targetOption.value;
-                    loadTestsetBtn.click();
-                } else {
-                    logToConsole(`Project ${projectName} not found in testsets`);
+                const targetFile = files.find(file => file.name.startsWith(wasmName) && file.name.endsWith('.yaml'));
+                if (targetFile) {
+                    const yamlResponse = await fetch(targetFile.download_url);
+                    if (yamlResponse.ok) {
+                        const yamlText = await yamlResponse.text();
+                        const testset = jsyaml.load(yamlText);
+                        if (testset && testset.metadata && testset.metadata.source && testset.metadata.source.includes('github.com')) {
+                            const sourceUrl = testset.metadata.source;
+                            const urlObj = new URL(sourceUrl);
+                            const parts = urlObj.pathname.split('/').filter(p => p);
+                            if (parts.length >= 2) {
+                                const repoPath = `${parts[0]}/${parts[1]}`;
+                                const repoResponse = await fetch(`https://api.github.com/repos/${repoPath}`);
+                                if (repoResponse.ok) {
+                                    const repoData = await repoResponse.json();
+                                    const defaultBranch = repoData.default_branch || 'main';
+                                    const proposedUrl = `https://github.com/${repoPath}/blob/${defaultBranch}/docs/test.md`;
+                                    mdUrlInput.value = proposedUrl;
+                                    logToConsole(`Auto-discovered Markdown URL: ${proposedUrl}`);
+                                    fetchMdBtn.click();
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1264,13 +1230,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchMdBtn.click();
             }
         } catch (e) {
-            console.error('Failed to fetch testsets', e);
-            logToConsole('Failed to fetch testsets from GitHub');
-            testsetSelect.innerHTML = '<option value="">Error loading testsets</option>';
+            console.error('Failed in discoverMdUrl', e);
         }
     }
 
-    fetchTestsets();
+    discoverMdUrl();
 
     function githubToRaw(url) {
         if (!url) return url;
@@ -1533,154 +1497,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logToConsole(summary);
         mdTableInfo.textContent = summary;
         runMdTableBtn.disabled = false;
-    });
-
-    runTestsetBtn.addEventListener('click', async () => {
-        if (!currentTestset || !currentTestset.test_steps) return;
-
-        logToConsole(`Running testset: ${currentTestset.project || 'Unnamed'}`);
-        runTestsetBtn.disabled = true;
-
-        // Initial state from UI
-        let uiVal = getBits(uiIn);
-        let uioVal = getBits(uioIn);
-        let rstNVal = rstN.checked ? 1 : 0;
-        let enaVal = ena.checked ? 1 : 0;
-        let clkVal = 0; // Start with clk low for consistency
-        const clkSelection = clk.value;
-
-        for (const step of currentTestset.test_steps) {
-            logToConsole(`Executing step: ${step.name || 'unnamed'}`);
-
-            // Update state from step values if present
-            if (step.values) {
-                if (step.values.ui_in !== undefined) uiVal = step.values.ui_in & 0xFF;
-                if (step.values.uio_in !== undefined) uioVal = step.values.uio_in & 0xFF;
-                if (step.values.rst_n !== undefined) rstNVal = step.values.rst_n ? 1 : 0;
-                if (step.values.ena !== undefined) enaVal = step.values.ena ? 1 : 0;
-            }
-
-            const numCycles = step.cycles || 1;
-            for (let i = 0; i < numCycles; i++) {
-                if (clkSelection === '1/0') {
-                    // Toggle clock
-                    clkVal = 1;
-                    await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
-                    clkVal = 0;
-                    await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
-                } else {
-                    clkVal = parseInt(clkSelection);
-                    await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
-                }
-                // Yield to main thread
-                await new Promise(r => setTimeout(r, 0));
-            }
-        }
-        logToConsole('Testset execution complete');
-        runTestsetBtn.disabled = false;
-    });
-
-    loadTestsetBtn.addEventListener('click', async () => {
-        const url = testsetSelect.value;
-        if (!url) {
-            alert('Please select a testset first');
-            return;
-        }
-
-        // Clear previous proposed MD URL
-        mdUrlInput.value = '';
-
-        try {
-            logToConsole(`Loading testset from ${url}...`);
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const yamlText = await response.text();
-
-            currentTestset = jsyaml.load(yamlText);
-            const projectName = currentTestset.project || 'Unknown Project';
-            logToConsole(`Loaded testset: ${projectName}`);
-
-            const selectedOption = testsetSelect.options[testsetSelect.selectedIndex];
-            if (selectedOption && selectedOption.textContent.endsWith('.yaml')) {
-                const fileName = selectedOption.textContent.replace('.yaml', '');
-                updateURLParameter(fileName);
-            } else {
-                updateURLParameter(projectName);
-            }
-
-            testsetInfo.innerHTML = '';
-
-            const projectDiv = document.createElement('div');
-            const projectLabel = document.createElement('strong');
-            projectLabel.textContent = 'Project: ';
-            projectDiv.appendChild(projectLabel);
-            projectDiv.appendChild(document.createTextNode(currentTestset.project || 'N/A'));
-            testsetInfo.appendChild(projectDiv);
-
-            if (currentTestset.metadata && currentTestset.metadata.source) {
-                const sourceUrl = currentTestset.metadata.source;
-                const sourceDiv = document.createElement('div');
-                const sourceLabel = document.createElement('strong');
-                sourceLabel.textContent = 'Source: ';
-                sourceDiv.appendChild(sourceLabel);
-                const sourceLink = document.createElement('a');
-                sourceLink.href = sourceUrl;
-                sourceLink.target = '_blank';
-                sourceLink.textContent = sourceUrl;
-                sourceDiv.appendChild(sourceLink);
-                testsetInfo.appendChild(sourceDiv);
-
-                // Propose Markdown test URL if source is GitHub
-                if (sourceUrl.includes('github.com')) {
-                    try {
-                        const urlObj = new URL(sourceUrl);
-                        const parts = urlObj.pathname.split('/').filter(p => p);
-                        if (parts.length >= 2) {
-                            const repoPath = `${parts[0]}/${parts[1]}`;
-                            logToConsole(`Proposing Markdown test URL for repository: ${repoPath}`);
-
-                            // Fetch default branch from GitHub API
-                            fetch(`https://api.github.com/repos/${repoPath}`)
-                                .then(res => res.ok ? res.json() : Promise.reject())
-                                .then(data => {
-                                    // Verify that we are still working on the same testset to avoid race conditions
-                                    if (currentTestset && currentTestset.metadata && currentTestset.metadata.source === sourceUrl) {
-                                        const defaultBranch = data.default_branch || 'main';
-                                        const proposedUrl = `https://github.com/${repoPath}/blob/${defaultBranch}/docs/test.md`;
-                                        mdUrlInput.value = proposedUrl;
-                                        logToConsole(`Proposed Markdown URL: ${proposedUrl}`);
-                                        fetchMdBtn.click();
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error('Failed to fetch repo default branch', err);
-                                    const proposedUrl = `https://github.com/${repoPath}/blob/main/docs/test.md`;
-                                    mdUrlInput.value = proposedUrl;
-                                    fetchMdBtn.click();
-                                });
-                        }
-                    } catch (err) {
-                        console.error('Failed to parse source URL', err);
-                    }
-                }
-            }
-
-            if (currentTestset.test_steps) {
-                const stepsDiv = document.createElement('div');
-                const stepsLabel = document.createElement('strong');
-                stepsLabel.textContent = 'Steps: ';
-                stepsDiv.appendChild(stepsLabel);
-                stepsDiv.appendChild(document.createTextNode(currentTestset.test_steps.length));
-                testsetInfo.appendChild(stepsDiv);
-            }
-
-            runTestsetBtn.disabled = false;
-        } catch (e) {
-            console.error('Failed to load testset', e);
-            logToConsole('Failed to load testset');
-            testsetInfo.textContent = 'Error loading testset.';
-            runTestsetBtn.disabled = true;
-        }
     });
 
     logToConsole('Tiny Tapeout Web Tester Initialized');
