@@ -1063,7 +1063,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Handle permalink
             const urlParams = new URLSearchParams(window.location.search);
-            const projectName = urlParams.get('project');
+            let projectName = urlParams.get('project');
+            const wasmName = urlParams.get('wasm');
+
+            if (!projectName && wasmName && wasmName !== 'default') {
+                // Try to find a testset starting with the wasm project ID (e.g. tt3990)
+                const options = Array.from(testsetSelect.options);
+                const targetOption = options.find(opt => opt.textContent.startsWith(wasmName));
+                if (targetOption) {
+                    projectName = targetOption.textContent.replace('.yaml', '');
+                    logToConsole(`Auto-loading testset for WASM engine: ${wasmName}`);
+                }
+            }
+
             if (projectName) {
                 logToConsole(`Permalink detected for project: ${projectName}`);
                 const options = Array.from(testsetSelect.options);
@@ -1344,6 +1356,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Clear previous proposed MD URL
+        mdUrlInput.value = '';
+
         try {
             logToConsole(`Loading testset from ${url}...`);
             const response = await fetch(url);
@@ -1372,16 +1387,49 @@ document.addEventListener('DOMContentLoaded', () => {
             testsetInfo.appendChild(projectDiv);
 
             if (currentTestset.metadata && currentTestset.metadata.source) {
+                const sourceUrl = currentTestset.metadata.source;
                 const sourceDiv = document.createElement('div');
                 const sourceLabel = document.createElement('strong');
                 sourceLabel.textContent = 'Source: ';
                 sourceDiv.appendChild(sourceLabel);
                 const sourceLink = document.createElement('a');
-                sourceLink.href = currentTestset.metadata.source;
+                sourceLink.href = sourceUrl;
                 sourceLink.target = '_blank';
-                sourceLink.textContent = currentTestset.metadata.source;
+                sourceLink.textContent = sourceUrl;
                 sourceDiv.appendChild(sourceLink);
                 testsetInfo.appendChild(sourceDiv);
+
+                // Propose Markdown test URL if source is GitHub
+                if (sourceUrl.includes('github.com')) {
+                    try {
+                        const urlObj = new URL(sourceUrl);
+                        const parts = urlObj.pathname.split('/').filter(p => p);
+                        if (parts.length >= 2) {
+                            const repoPath = `${parts[0]}/${parts[1]}`;
+                            logToConsole(`Proposing Markdown test URL for repository: ${repoPath}`);
+
+                            // Fetch default branch from GitHub API
+                            fetch(`https://api.github.com/repos/${repoPath}`)
+                                .then(res => res.ok ? res.json() : Promise.reject())
+                                .then(data => {
+                                    // Verify that we are still working on the same testset to avoid race conditions
+                                    if (currentTestset && currentTestset.metadata && currentTestset.metadata.source === sourceUrl) {
+                                        const defaultBranch = data.default_branch || 'main';
+                                        const proposedUrl = `https://github.com/${repoPath}/blob/${defaultBranch}/docs/test.md`;
+                                        mdUrlInput.value = proposedUrl;
+                                        logToConsole(`Proposed Markdown URL: ${proposedUrl}`);
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Failed to fetch repo default branch', err);
+                                    const proposedUrl = `https://github.com/${repoPath}/blob/main/docs/test.md`;
+                                    mdUrlInput.value = proposedUrl;
+                                });
+                        }
+                    } catch (err) {
+                        console.error('Failed to parse source URL', err);
+                    }
+                }
             }
 
             if (currentTestset.test_steps) {
