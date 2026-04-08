@@ -1142,44 +1142,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchWasmEngines() {
         try {
-            logToConsole('Fetching WASM engines and project titles from GitHub...');
-            // Fetch WASM files
-            const wasmFilesResponse = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/wasm');
-            if (!wasmFilesResponse.ok) throw new Error(`HTTP error fetching wasm! status: ${wasmFilesResponse.status}`);
-            const wasmFiles = await wasmFilesResponse.json();
-            const engines = wasmFiles.filter(f => f.name.endsWith('.js')).map(f => f.name.replace('.js', ''));
+            logToConsole('Fetching projects and WASM engines from GitHub...');
+            // Fetch all files from the repository tree to get YAMLs and WASMs at once
+            const treeResponse = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/git/trees/main?recursive=1');
+            if (!treeResponse.ok) throw new Error(`HTTP error! status: ${treeResponse.status}`);
+            const treeData = await treeResponse.json();
+            const files = treeData.tree;
 
-            // Fetch data files for titles
-            const dataFilesResponse = await fetch('https://api.github.com/repos/chatelao/tt-test-framework/contents/src/data');
-            if (!dataFilesResponse.ok) throw new Error(`HTTP error fetching data! status: ${dataFilesResponse.status}`);
-            const dataFiles = await dataFilesResponse.json();
+            const wasmEngines = new Set(
+                files.filter(f => f.path.startsWith('wasm/') && f.path.endsWith('.js'))
+                     .map(f => f.path.replace('wasm/', '').replace('.js', ''))
+            );
 
-            // Map project number to title (e.g. tt3990 -> fp8_mul)
-            const titleMap = {};
-            dataFiles.forEach(f => {
-                if (f.name.endsWith('.yaml')) {
-                    const match = f.name.match(/^(tt\d+)[_-](.+)\.yaml$/);
+            const projects = [];
+            files.forEach(f => {
+                if (f.path.startsWith('src/data/') && f.path.endsWith('.yaml')) {
+                    const name = f.path.replace('src/data/', '').replace('.yaml', '');
+                    const match = name.match(/^(tt\d+)[_-](.+)$/);
                     if (match) {
-                        titleMap[match[1]] = match[2];
+                        projects.push({
+                            id: match[1],
+                            title: match[2].replace(/_/g, ' '),
+                            hasWasm: wasmEngines.has(match[1])
+                        });
+                    } else if (name.startsWith('tt')) {
+                        projects.push({
+                            id: name,
+                            title: '',
+                            hasWasm: wasmEngines.has(name)
+                        });
                     }
                 }
             });
 
+            // Sort projects by ID (numerical)
+            projects.sort((a, b) => {
+                const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            });
+
             // Populate dropdown
-            engines.forEach(engine => {
+            projects.forEach(p => {
                 const option = document.createElement('option');
-                option.value = engine;
-                const title = titleMap[engine] || '';
-                option.textContent = `${engine} ${title}`.trim();
+                option.value = p.id;
+                const wasmSuffix = p.hasWasm ? '' : ' (No WASM)';
+                option.textContent = `${p.id} ${p.title}${wasmSuffix}`.trim();
                 wasmEngineSelect.appendChild(option);
             });
 
             // Ensure the selection is restored after populating
             wasmEngineSelect.value = window.currentWasmEngine;
-            logToConsole(`Fetched ${engines.length} WASM engines`);
+            logToConsole(`Fetched ${projects.length} projects (${wasmEngines.size} with WASM)`);
         } catch (e) {
-            console.error('Failed to fetch WASM engines', e);
-            logToConsole('Failed to fetch WASM engines from GitHub');
+            console.error('Failed to fetch projects', e);
+            logToConsole('Failed to fetch projects from GitHub');
         }
     }
 
