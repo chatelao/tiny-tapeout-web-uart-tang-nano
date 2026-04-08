@@ -1,0 +1,9 @@
+127.0.0.1 - - [08/Apr/2026 05:30:43] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Apr/2026 05:30:43] "GET /style.css HTTP/1.1" 200 -
+127.0.0.1 - - [08/Apr/2026 05:30:43] "GET /app.js HTTP/1.1" 200 -
+Serving at port 8005
+Verified: Sending: ui_in=0x10, uio_in=0x20
+Verified: Sending: ui_in=0x30, uio_in=0x40
+Verified: Sending: ui_in=0x30, uio_in=0x40
+Verified: Sending: ui_in=0x83, uio_in=0x00
+Markdown loading test passed!
