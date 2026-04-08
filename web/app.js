@@ -285,6 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             span.textContent = value;
         }
+
+        const dataChannels = ['ui_in', 'uio_in', 'uo_out', 'uio_out', 'uio_oe'];
+        if (dataChannels.includes(channel)) {
+            if (value === 0) {
+                span.classList.add('value-zero');
+            } else if (value === 255) {
+                span.classList.add('value-max');
+            }
+        }
+
         return span;
     }
 
