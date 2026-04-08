@@ -750,6 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addHistoryRow(inputs, outputs, timestamp, cycleCount);
         if (!skipUpdate) updateDiagram();
+        return outputs;
     }
 
     function exportToCsv() {
@@ -1194,6 +1195,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const header = h.toLowerCase();
             if (header.includes('ui_in')) colMap.ui_in = idx;
             if (header.includes('uio_in')) colMap.uio_in = idx;
+            if (header.includes('uo_out')) colMap.uo_out = idx;
+            if (header.includes('uio_out')) colMap.uio_out = idx;
+            if (header.includes('uio_oe')) colMap.uio_oe = idx;
             if (header.includes('cycle')) colMap.cycle = idx;
         });
 
@@ -1202,6 +1206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const rstVal = rstN.checked ? 1 : 0;
         const enaVal = ena.checked ? 1 : 0;
         const clkSelection = clk.value;
+
+        let passCount = 0;
+        let failCount = 0;
+        let totalChecks = 0;
 
         for (const row of table.rows) {
             const cycleInfo = colMap.cycle !== undefined ? parseCycle(row[colMap.cycle]) : { start: 0, end: 0 };
@@ -1213,18 +1221,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastUi = uiVal;
                 lastUio = uioVal;
 
+                let results;
                 if (clkSelection === '1/0') {
                     await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
-                    await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                    results = await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
                 } else {
                     const clkVal = parseInt(clkSelection);
-                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                    results = await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
                 }
+
+                // Verification
+                const expected = {
+                    uo_out: colMap.uo_out !== undefined ? parseMdValue(row[colMap.uo_out], c) : undefined,
+                    uio_out: colMap.uio_out !== undefined ? parseMdValue(row[colMap.uio_out], c) : undefined,
+                    uio_oe: colMap.uio_oe !== undefined ? parseMdValue(row[colMap.uio_oe], c) : undefined
+                };
+
+                let stepPassed = true;
+                let stepDetails = [];
+
+                for (const key in expected) {
+                    if (expected[key] !== undefined) {
+                        totalChecks++;
+                        if (results[key] === expected[key]) {
+                            stepDetails.push(`${key}: Match (0x${results[key].toString(16).toUpperCase().padStart(2, '0')})`);
+                        } else {
+                            stepPassed = false;
+                            stepDetails.push(`${key}: MISMATCH! Expected 0x${expected[key].toString(16).toUpperCase().padStart(2, '0')}, Got 0x${results[key].toString(16).toUpperCase().padStart(2, '0')}`);
+                        }
+                    }
+                }
+
+                if (stepDetails.length > 0) {
+                    if (stepPassed) {
+                        passCount++;
+                        logToConsole(`Cycle ${c} PASSED: ${stepDetails.join(', ')}`);
+                    } else {
+                        failCount++;
+                        logToConsole(`Cycle ${c} FAILED: ${stepDetails.join(', ')}`);
+                    }
+                }
+
                 await new Promise(r => setTimeout(r, 0));
             }
         }
 
-        logToConsole('Markdown table execution complete');
+        const summary = `Execution complete. Passed: ${passCount}, Failed: ${failCount}, Total checks: ${totalChecks}`;
+        logToConsole(summary);
+        mdTableInfo.textContent = summary;
         runMdTableBtn.disabled = false;
     });
 
