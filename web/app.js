@@ -93,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const useFullWasm = document.getElementById('useFullWasm');
     const wasmEngineSelect = document.getElementById('wasmEngineSelect');
 
+    const uoOutResult = document.getElementById('uo_out_result');
+    const uioOutResult = document.getElementById('uio_out_result');
+    const uioOeResult = document.getElementById('uio_oe_result');
+
     // Set dropdown value from current URL
     wasmEngineSelect.value = window.currentWasmEngine;
 
@@ -222,21 +226,117 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Column visibility toggles
-    ['uio_in', 'uio_out', 'uio_oe'].forEach(col => {
-        const toggle = document.getElementById(`toggle-${col}`);
-        toggle.addEventListener('change', () => {
-            if (toggle.checked) {
-                testerTable.classList.remove(`hide-${col}`);
-            } else {
-                testerTable.classList.add(`hide-${col}`);
-            }
-            updateDiagram();
-        });
-    });
     const historyData = [];
     let currentTestset = null;
     let cycleCount = 0;
+
+    function formatValue(value, type, channel) {
+        if (type === 'bits') {
+            return createBitDisplay(value);
+        }
+
+        const span = document.createElement('span');
+        if (type === 'hex') {
+            if (channel === 'cycle') {
+                span.textContent = `0x${value.toString(16).toUpperCase()}`;
+            } else {
+                span.textContent = `0x${value.toString(16).toUpperCase().padStart(2, '0')}`;
+            }
+        } else if (type === 'dec') {
+            span.textContent = value.toString();
+        } else if (type === 'bin') {
+            span.textContent = `0b${value.toString(2).padStart(8, '0')}`;
+        } else if (type === 'fp8_e4m3' || type === 'fp8') {
+            span.textContent = formatFP8_E4M3(value);
+        } else if (type === 'fp8_e3m4') {
+            span.textContent = formatFP8_E3M4(value);
+        } else if (type === 'dual_fp4') {
+            const high = formatFP4((value >> 4) & 0xF);
+            const low = formatFP4(value & 0xF);
+            span.textContent = `${high} | ${low}`;
+        } else if (type === 'binary' || type === 'show') {
+            span.textContent = value;
+        } else {
+            span.textContent = value;
+        }
+        return span;
+    }
+
+    function renderHistory() {
+        historyBody.innerHTML = '';
+        // Create a copy to reverse without affecting original
+        const data = [...historyData].reverse();
+        data.forEach(entry => {
+            const inputs = {
+                ui_in: entry.ui_in,
+                uio_in: entry.uio_in,
+                clk: entry.clk,
+                rst_n: entry.rst_n,
+                ena: entry.ena
+            };
+            const outputs = {
+                uo_out: entry.uo_out,
+                uio_out: entry.uio_out,
+                uio_oe: entry.uio_oe
+            };
+            addHistoryRow(inputs, outputs, entry.time, entry.cycle, true);
+        });
+    }
+
+    function updateInputRowResults() {
+        if (historyData.length === 0) return;
+        const last = historyData[historyData.length - 1];
+
+        const update = (id, val, ch) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.remove('results-placeholder');
+            const typeSelect = document.getElementById(`table-type-${ch}`);
+            const type = typeSelect ? typeSelect.value : 'hex';
+            el.appendChild(formatValue(val, type, ch));
+        };
+
+        update('uo_out_result', last.uo_out, 'uo_out');
+        update('uio_out_result', last.uio_out, 'uio_out');
+        update('uio_oe_result', last.uio_oe, 'uio_oe');
+    }
+
+    // Column visibility and formatting sync
+    const channels = ['cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+
+    channels.forEach(ch => {
+        const tableSelect = document.getElementById(`table-type-${ch}`);
+        const diagramSelect = document.getElementById(`type-${ch}`);
+
+        const handleSync = (src, dest) => {
+            if (!src || !dest) return;
+            dest.value = src.value;
+
+            // Handle visibility
+            if (src.value === 'hidden') {
+                testerTable.classList.add(`hide-${ch}`);
+            } else {
+                testerTable.classList.remove(`hide-${ch}`);
+            }
+
+            renderHistory();
+            updateInputRowResults();
+            updateDiagram();
+        };
+
+        if (tableSelect) {
+            tableSelect.addEventListener('change', () => handleSync(tableSelect, diagramSelect));
+        }
+        if (diagramSelect) {
+            diagramSelect.addEventListener('change', () => handleSync(diagramSelect, tableSelect));
+        }
+
+        // Initial visibility check
+        if (tableSelect && tableSelect.value === 'hidden') {
+            testerTable.classList.add(`hide-${ch}`);
+        }
+    });
 
     function updateURLParameter(projectName) {
         const url = new URL(window.location.href);
@@ -313,67 +413,48 @@ document.addEventListener('DOMContentLoaded', () => {
             span.textContent = bitVal;
             container.appendChild(span);
         }
-        const hexSpan = document.createElement('span');
-        hexSpan.className = 'hex-display';
-        hexSpan.textContent = `0x${value.toString(16).padStart(2, '0').toUpperCase()}`;
-        container.appendChild(hexSpan);
         return container;
     }
 
-    function addHistoryRow(inputs, outputs, timestamp, cycle) {
+    function addHistoryRow(inputs, outputs, timestamp, cycle, isRerender = false) {
         const row = document.createElement('tr');
 
-        // Time
-        const timeTd = document.createElement('td');
-        timeTd.className = 'time-cell';
-        timeTd.textContent = timestamp;
-        row.appendChild(timeTd);
+        const colConfigs = {
+            time: { val: timestamp, class: 'time-cell' },
+            cycle: { val: cycle, class: 'time-cell' },
+            ui_in: { val: inputs.ui_in },
+            uio_in: { val: inputs.uio_in },
+            clk: { val: inputs.clk },
+            rst_n: { val: inputs.rst_n },
+            ena: { val: inputs.ena },
+            uo_out: { val: outputs.uo_out },
+            uio_out: { val: outputs.uio_out },
+            uio_oe: { val: outputs.uio_oe }
+        };
 
-        // Cycle
-        const cycleTd = document.createElement('td');
-        cycleTd.className = 'time-cell';
-        cycleTd.textContent = cycle;
-        row.appendChild(cycleTd);
-
-        // ui_in
-        const uiInTd = document.createElement('td');
-        uiInTd.appendChild(createBitDisplay(inputs.ui_in));
-        row.appendChild(uiInTd);
-
-        // uio_in
-        const uioInTd = document.createElement('td');
-        uioInTd.className = 'col-uio_in';
-        uioInTd.appendChild(createBitDisplay(inputs.uio_in));
-        row.appendChild(uioInTd);
-
-        // clk, rst_n, ena
-        [inputs.clk, inputs.rst_n, inputs.ena].forEach(val => {
+        Object.keys(colConfigs).forEach(ch => {
+            const config = colConfigs[ch];
             const td = document.createElement('td');
-            td.textContent = val;
+            td.className = `col-${ch} ${config.class || ''}`;
+
+            if (ch === 'time') {
+                td.textContent = config.val;
+            } else {
+                const typeSelect = document.getElementById(`table-type-${ch}`);
+                const type = typeSelect ? typeSelect.value : 'dec';
+                td.appendChild(formatValue(config.val, type, ch));
+            }
             row.appendChild(td);
         });
 
-        // uo_out
-        const uoOutTd = document.createElement('td');
-        uoOutTd.appendChild(createBitDisplay(outputs.uo_out));
-        row.appendChild(uoOutTd);
-
-        // uio_out
-        const uioOutTd = document.createElement('td');
-        uioOutTd.className = 'col-uio_out';
-        uioOutTd.appendChild(createBitDisplay(outputs.uio_out));
-        row.appendChild(uioOutTd);
-
-        // uio_oe
-        const uioOeTd = document.createElement('td');
-        uioOeTd.className = 'col-uio_oe';
-        uioOeTd.appendChild(createBitDisplay(outputs.uio_oe));
-        row.appendChild(uioOeTd);
-
-        historyBody.prepend(row);
+        if (isRerender) {
+            historyBody.appendChild(row);
+        } else {
+            historyBody.prepend(row);
+        }
     }
 
-    function formatFP8(val) {
+    function formatFP8_E4M3(val) {
         // E4M3: 1 sign, 4 exponent, 3 mantissa, bias 7
         const sign = (val >> 7) & 1;
         const exponent = (val >> 3) & 0xF;
@@ -389,6 +470,23 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Normal
             result = (sign ? -1 : 1) * Math.pow(2, exponent - 7) * (1 + mantissa / 8);
+        }
+        return result.toFixed(3);
+    }
+
+    function formatFP8_E3M4(val) {
+        // E3M4: 1 sign, 3 exponent, 4 mantissa, bias 3
+        const sign = (val >> 7) & 1;
+        const exponent = (val >> 4) & 0x7;
+        const mantissa = val & 0xF;
+
+        let result = 0;
+        if (exponent === 0) {
+            // Subnormal
+            result = (sign ? -1 : 1) * Math.pow(2, -2) * (mantissa / 16);
+        } else {
+            // Normal
+            result = (sign ? -1 : 1) * Math.pow(2, exponent - 3) * (1 + mantissa / 16);
         }
         return result.toFixed(3);
     }
@@ -416,12 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const channels = ['cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
         const config = {};
         channels.forEach(ch => {
-            let type = document.getElementById(`type-${ch}`).value;
-            const toggle = document.getElementById(`toggle-${ch}`);
-            if (toggle && !toggle.checked) {
-                type = 'hidden';
-            }
-            config[ch] = type;
+            const tableSelect = document.getElementById(`table-type-${ch}`);
+            config[ch] = tableSelect ? tableSelect.value : 'hex';
         });
 
         let puml = "@startuml\n";
@@ -485,8 +579,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             puml += `${ch} is "${val}"\n`;
                         } else if (type === 'bin') {
                             puml += `${ch} is "0b${val.toString(2).padStart(8, '0')}"\n`;
-                        } else if (type === 'fp8') {
-                            puml += `${ch} is "${formatFP8(val)}"\n`;
+                        } else if (type === 'fp8_e4m3' || type === 'fp8') {
+                            puml += `${ch} is "${formatFP8_E4M3(val)}"\n`;
+                        } else if (type === 'fp8_e3m4') {
+                            puml += `${ch} is "${formatFP8_E3M4(val)}"\n`;
                         } else if (type === 'dual_fp4') {
                             const high = formatFP4((val >> 4) & 0xF);
                             const low = formatFP4(val & 0xF);
@@ -747,6 +843,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         addHistoryRow(inputs, outputs, timestamp, currentCycle);
+
+        updateInputRowResults();
+
         if (!skipUpdate) updateDiagram();
         return outputs;
     }
@@ -949,6 +1048,13 @@ document.addEventListener('DOMContentLoaded', () => {
         cycleCount = 0;
         historyBody.innerHTML = '';
         consoleDiv.textContent = '';
+
+        uoOutResult.textContent = 'Ready to send...';
+        uoOutResult.classList.add('results-placeholder');
+        uioOutResult.textContent = '';
+        uioOutResult.classList.add('results-placeholder');
+        uioOeResult.textContent = '';
+        uioOeResult.classList.add('results-placeholder');
 
         // Reset WASM DigitalTwin state if available
         if (digitalTwin) {
@@ -1235,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let lastUi = getBits(uiIn);
         let lastUio = getBits(uioIn);
-        const rstVal = rstN.checked ? 1 : 0;
+        const rstNVal = rstN.checked ? 1 : 0;
         const enaVal = ena.checked ? 1 : 0;
         const clkSelection = clk.value;
 
@@ -1255,11 +1361,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 let results;
                 if (clkSelection === '1/0') {
-                    results = await performTransaction(uiVal, uioVal, 1, rstVal, enaVal);
-                    await performTransaction(uiVal, uioVal, 0, rstVal, enaVal);
+                    results = await performTransaction(uiVal, uioVal, 1, rstNVal, enaVal);
+                    await performTransaction(uiVal, uioVal, 0, rstNVal, enaVal);
                 } else {
                     const clkVal = parseInt(clkSelection);
-                    results = await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                    results = await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
                 }
 
                 // Verification
@@ -1313,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initial state from UI
         let uiVal = getBits(uiIn);
         let uioVal = getBits(uioIn);
-        let rstVal = rstN.checked ? 1 : 0;
+        let rstNVal = rstN.checked ? 1 : 0;
         let enaVal = ena.checked ? 1 : 0;
         let clkVal = 0; // Start with clk low for consistency
         const clkSelection = clk.value;
@@ -1325,7 +1431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (step.values) {
                 if (step.values.ui_in !== undefined) uiVal = step.values.ui_in & 0xFF;
                 if (step.values.uio_in !== undefined) uioVal = step.values.uio_in & 0xFF;
-                if (step.values.rst_n !== undefined) rstVal = step.values.rst_n ? 1 : 0;
+                if (step.values.rst_n !== undefined) rstNVal = step.values.rst_n ? 1 : 0;
                 if (step.values.ena !== undefined) enaVal = step.values.ena ? 1 : 0;
             }
 
@@ -1334,12 +1440,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (clkSelection === '1/0') {
                     // Toggle clock
                     clkVal = 1;
-                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
                     clkVal = 0;
-                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
                 } else {
                     clkVal = parseInt(clkSelection);
-                    await performTransaction(uiVal, uioVal, clkVal, rstVal, enaVal);
+                    await performTransaction(uiVal, uioVal, clkVal, rstNVal, enaVal);
                 }
                 // Yield to main thread
                 await new Promise(r => setTimeout(r, 0));

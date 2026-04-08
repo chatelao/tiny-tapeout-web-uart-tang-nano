@@ -76,25 +76,29 @@ h1 {
     background-color: #f8f9fa;
     font-weight: bold;
     font-size: 0.85rem;
+    vertical-align: top;
+}
+
+.table-type {
+    display: block;
+    margin: 4px auto 0;
+    font-size: 0.75rem;
+    padding: 2px;
+    font-weight: normal;
+    font-family: sans-serif;
 }
 
 /* Column hiding styles */
-.tester-table.hide-uio_in .col-uio_in > *:not(input[type="checkbox"]),
-.tester-table.hide-uio_out .col-uio_out > *:not(input[type="checkbox"]),
-.tester-table.hide-uio_oe .col-uio_oe > *:not(input[type="checkbox"]) {
+.tester-table.hide-cycle .col-cycle,
+.tester-table.hide-ui_in .col-ui_in,
+.tester-table.hide-uio_in .col-uio_in,
+.tester-table.hide-clk .col-clk,
+.tester-table.hide-rst_n .col-rst_n,
+.tester-table.hide-ena .col-ena,
+.tester-table.hide-uo_out .col-uo_out,
+.tester-table.hide-uio_out .col-uio_out,
+.tester-table.hide-uio_oe .col-uio_oe {
     display: none;
-}
-
-.tester-table.hide-uio_in td.col-uio_in,
-.tester-table.hide-uio_out td.col-uio_out,
-.tester-table.hide-uio_oe td.col-uio_oe {
-    background-color: #f0f0f0;
-}
-
-.tester-table input[type="checkbox"][id^="toggle-"] {
-    margin-right: 4px;
-    vertical-align: middle;
-    cursor: pointer;
 }
 
 .input-row {
