@@ -250,12 +250,28 @@ button:hover {
     background-color: #a71d2a;
 }
 
+.testset-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
 .md-url-input {
     flex-grow: 1;
     padding: 6px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 0.9rem;
+}
+
+#mdTableSelect {
+    flex-grow: 1;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background-color: #fff;
 }
 
 #runMdTable {
@@ -470,13 +486,14 @@ button:disabled {
         padding: 15px;
     }
 
-    .table-actions, .flasher-controls, .serial-controls {
+    .table-actions, .flasher-controls, .serial-controls, .testset-actions {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
     }
 
-    .table-actions button, .flasher-controls button, .serial-controls button {
+    .table-actions button, .flasher-controls button, .serial-controls button,
+    .testset-actions button, .testset-actions select, .testset-actions input {
         width: 100%;
         padding: 10px;
     }
