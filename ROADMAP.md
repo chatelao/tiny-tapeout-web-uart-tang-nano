@@ -1,4 +1,5 @@
 # ROADMAP
+- [ ] Add project 4154 to the GH pages (#179)
 - [ ] Try to add all missing WASM (#178)
 - [x] Update gh pages to show all projects available in tt-test-framework (#176) (completed at 2026-04-08 21:01:20)
 - [ ] Update gh pages to show all projects available in tt-test-framework (#173)
