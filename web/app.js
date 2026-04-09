@@ -4,7 +4,7 @@
     const wasmParam = urlParams.get('wasm');
 
     // Security check: validate wasmParam
-    let wasmEngine = 'tt3647';
+    let wasmEngine = 'tt4154';
     if (wasmParam && /^tt\d+$/.test(wasmParam)) {
         wasmEngine = wasmParam;
     }
@@ -1184,6 +1184,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Populate dropdown
             projects.forEach(p => {
+                // Check if the option already exists (e.g., hardcoded in HTML)
+                if ([...wasmEngineSelect.options].some(opt => opt.value === p.id)) {
+                    return;
+                }
                 const option = document.createElement('option');
                 option.value = p.id;
                 const wasmSuffix = p.hasWasm ? '' : ' (No WASM)';

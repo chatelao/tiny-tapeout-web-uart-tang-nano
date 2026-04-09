@@ -25,17 +25,9 @@ def run_verify():
             print("Navigating to http://localhost:8000")
             page.goto("http://localhost:8000")
 
-            # Explicitly select tt3647 because it's no longer the default
-            print("Selecting tt3647...")
-            page.wait_for_selector("#wasmEngineSelect option[value='tt3647']", state="attached", timeout=30000)
-            page.select_option("#wasmEngineSelect", "tt3647")
-
-            # Wait for reload
-            page.wait_for_load_state("networkidle")
-
-            # Verify that tt3647 is selected
-            expect(page.locator("#wasmEngineSelect")).to_have_value("tt3647")
-            print("Verified tt3647 is selected.")
+            # Verify that tt4154 is selected by default
+            expect(page.locator("#wasmEngineSelect")).to_have_value("tt4154")
+            print("Verified tt4154 is default engine.")
 
             # Wait for WASM to be ready
             page.wait_for_selector("#useFullWasm", state="attached")
@@ -49,13 +41,13 @@ def run_verify():
 
             # Wait for console to show "Received (Emulated WASM)"
             expect(page.locator("#console")).to_contain_text("Received (Emulated WASM)", timeout=10000)
-            print("Verified tt3647 simulation is running.")
+            print("Verified tt4154 simulation is running.")
 
             browser.close()
     except Exception as e:
         print(f"An error occurred: {e}")
         if 'page' in locals():
-            page.screenshot(path="verify_3647_failure.png")
+            page.screenshot(path="verify_4154_failure.png")
     finally:
         os.kill(server_process.pid, signal.SIGTERM)
 
