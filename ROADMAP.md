@@ -1,5 +1,5 @@
 # ROADMAP
-- [ ] Add a column on the right to group 2 - 16 cycles to show 16 - 64 bit input / output, assuming a data cycle = a 1/0 clock pair (#183)
+- [x] Add a column on the right to group 2 - 16 cycles to show 16 - 64 bit input / output, assuming a data cycle = a 1/0 clock pair (#183) (completed at 2026-04-19 19:47:30)
 - [x] GH "Markdown Test Cases" section, make the url entry field and the dropdown wieder / but still responsive (#181) (completed at 2026-04-09 12:35:48)
 - [x] Add project 4154 to the GH pages (#179) (completed at 2026-04-09 12:19:59)
 - [ ] Try to add all missing WASM (#178)
