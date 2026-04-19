@@ -97,7 +97,8 @@ h1 {
 .tester-table.hide-ena .col-ena,
 .tester-table.hide-uo_out .col-uo_out,
 .tester-table.hide-uio_out .col-uio_out,
-.tester-table.hide-uio_oe .col-uio_oe {
+.tester-table.hide-uio_oe .col-uio_oe,
+.tester-table.hide-grouped .col-grouped {
     display: none;
 }
 

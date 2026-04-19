@@ -126,6 +126,28 @@
                                 <option value="hidden">Hidden</option>
                             </select>
                         </th>
+                        <th class="col-grouped">
+                            Grouped
+                            <select id="table-type-grouped-signal" class="table-type">
+                                <option value="ui_in">ui_in</option>
+                                <option value="uio_in">uio_in</option>
+                                <option value="uo_out" selected>uo_out</option>
+                                <option value="uio_out">uio_out</option>
+                            </select>
+                            <select id="table-type-grouped-size" class="table-type">
+                                <option value="2">2 cycles</option>
+                                <option value="4" selected>4 cycles</option>
+                                <option value="8">8 cycles</option>
+                                <option value="16">16 cycles</option>
+                            </select>
+                            <select id="table-type-grouped" class="table-type">
+                                <option value="hex">Hex</option>
+                                <option value="dec">Dec</option>
+                                <option value="bin">Bin</option>
+                                <option value="bits">Bits</option>
+                                <option value="hidden" selected>Hidden</option>
+                            </select>
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="input-section">
@@ -168,6 +190,7 @@
                         <td class="col-uo_out results-placeholder" id="uo_out_result">Ready to send...</td>
                         <td class="col-uio_out results-placeholder" id="uio_out_result"></td>
                         <td class="col-uio_oe results-placeholder" id="uio_oe_result"></td>
+                        <td class="col-grouped results-placeholder" id="grouped_result"></td>
                     </tr>
                 </tbody>
                 <tbody id="history">
