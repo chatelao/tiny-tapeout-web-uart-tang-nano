@@ -238,8 +238,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyData = [];
     let cycleCount = 0;
 
+    function getGroupedValue(historyIndex, signal, numCycles) {
+        let value = 0n;
+        let cyclesFound = 0;
+        let foundAny = false;
+
+        // Traverse backwards from historyIndex
+        for (let i = historyIndex; i >= 0; i--) {
+            const entry = historyData[i];
+            const prevEntry = i > 0 ? historyData[i - 1] : null;
+
+            // Detect falling edge of clk (1 -> 0)
+            const isFallingEdge = (entry.clk === 0 && (!prevEntry || prevEntry.clk === 1));
+
+            if (isFallingEdge) {
+                const shift = BigInt(cyclesFound * 8);
+                value |= BigInt(entry[signal]) << shift;
+                cyclesFound++;
+                foundAny = true;
+                if (cyclesFound >= numCycles) break;
+            }
+        }
+
+        return foundAny ? value : 0n;
+    }
+
     function formatValue(value, type, channel) {
         if (type === 'bits') {
+            if (channel === 'grouped') {
+                const sizeSelect = document.getElementById('table-type-grouped-size');
+                const numCycles = sizeSelect ? parseInt(sizeSelect.value) : 4;
+                return createBitDisplay(value, numCycles * 8);
+            }
             return createBitDisplay(value);
         }
 
@@ -247,13 +277,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'hex') {
             if (channel === 'cycle') {
                 span.textContent = `0x${value.toString(16).toUpperCase()}`;
+            } else if (channel === 'grouped') {
+                span.textContent = `0x${value.toString(16).toUpperCase()}`;
             } else {
                 span.textContent = `0x${value.toString(16).toUpperCase().padStart(2, '0')}`;
             }
         } else if (type === 'dec') {
             span.textContent = value.toString();
         } else if (type === 'bin') {
-            span.textContent = `0b${value.toString(2).padStart(8, '0')}`;
+            if (channel === 'grouped') {
+                span.textContent = `0b${value.toString(2)}`;
+            } else {
+                span.textContent = `0b${value.toString(2).padStart(8, '0')}`;
+            }
         } else if (type === 'fp8_e4m3' || type === 'fp8') {
             span.textContent = formatFP8_E4M3(value);
         } else if (type === 'fp8_e3m4') {
@@ -282,9 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderHistory() {
         historyBody.innerHTML = '';
-        // Create a copy to reverse without affecting original
-        const data = [...historyData].reverse();
-        data.forEach(entry => {
+        // Iterate through historyData in reverse order for display
+        for (let i = historyData.length - 1; i >= 0; i--) {
+            const entry = historyData[i];
             const inputs = {
                 ui_in: entry.ui_in,
                 uio_in: entry.uio_in,
@@ -297,8 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 uio_out: entry.uio_out,
                 uio_oe: entry.uio_oe
             };
-            addHistoryRow(inputs, outputs, entry.time, entry.cycle, true);
-        });
+            addHistoryRow(inputs, outputs, entry.time, entry.cycle, true, i);
+        }
     }
 
     function updateInputRowResults() {
@@ -318,18 +354,24 @@ document.addEventListener('DOMContentLoaded', () => {
         update('uo_out_result', last.uo_out, 'uo_out');
         update('uio_out_result', last.uio_out, 'uio_out');
         update('uio_oe_result', last.uio_oe, 'uio_oe');
+
+        const groupedSignal = document.getElementById('table-type-grouped-signal').value;
+        const groupedSize = parseInt(document.getElementById('table-type-grouped-size').value);
+        const groupedValue = getGroupedValue(historyData.length - 1, groupedSignal, groupedSize);
+        update('grouped_result', groupedValue, 'grouped');
     }
 
     // Column visibility and formatting sync
-    const channels = ['cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe'];
+    const channels = ['cycle', 'ui_in', 'uio_in', 'clk', 'rst_n', 'ena', 'uo_out', 'uio_out', 'uio_oe', 'grouped'];
 
     channels.forEach(ch => {
         const tableSelect = document.getElementById(`table-type-${ch}`);
+        // table-type-grouped has no direct diagram counterpart in the same way, but it shares the name
         const diagramSelect = document.getElementById(`type-${ch}`);
 
         const handleSync = (src, dest) => {
-            if (!src || !dest) return;
-            dest.value = src.value;
+            if (!src) return;
+            if (dest) dest.value = src.value;
 
             // Handle visibility
             if (src.value === 'hidden') {
@@ -354,6 +396,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tableSelect && tableSelect.value === 'hidden') {
             testerTable.classList.add(`hide-${ch}`);
         }
+    });
+
+    // Special listeners for grouped configuration
+    ['table-type-grouped-signal', 'table-type-grouped-size'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            renderHistory();
+            updateInputRowResults();
+        });
     });
 
 
@@ -412,11 +462,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBitsFromHex(uioInHex, uioIn);
     });
 
-    function createBitDisplay(value) {
+    function createBitDisplay(value, size = 8) {
         const container = document.createElement('div');
         container.className = 'bits-out';
-        for (let i = 0; i < 8; i++) {
-            const bitVal = (value >> (7 - i)) & 1;
+        for (let i = 0; i < size; i++) {
+            let bitVal;
+            if (typeof value === 'bigint') {
+                bitVal = (value >> BigInt(size - 1 - i)) & 1n;
+            } else {
+                bitVal = (value >> (size - 1 - i)) & 1;
+            }
             const span = document.createElement('span');
             span.className = 'bit' + (bitVal ? ' high' : '');
             span.textContent = bitVal;
@@ -425,8 +480,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return container;
     }
 
-    function addHistoryRow(inputs, outputs, timestamp, cycle, isRerender = false) {
+    function addHistoryRow(inputs, outputs, timestamp, cycle, isRerender = false, historyIndex = -1) {
         const row = document.createElement('tr');
+
+        if (historyIndex === -1) {
+            historyIndex = historyData.length - 1;
+        }
+
+        const groupedSignal = document.getElementById('table-type-grouped-signal').value;
+        const groupedSize = parseInt(document.getElementById('table-type-grouped-size').value);
+        const groupedValue = getGroupedValue(historyIndex, groupedSignal, groupedSize);
 
         const colConfigs = {
             time: { val: timestamp, class: 'time-cell' },
@@ -438,7 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ena: { val: inputs.ena },
             uo_out: { val: outputs.uo_out },
             uio_out: { val: outputs.uio_out },
-            uio_oe: { val: outputs.uio_oe }
+            uio_oe: { val: outputs.uio_oe },
+            grouped: { val: groupedValue }
         };
 
         Object.keys(colConfigs).forEach(ch => {
