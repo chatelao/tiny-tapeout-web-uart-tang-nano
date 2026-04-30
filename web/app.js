@@ -90,6 +90,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const useFullWasm = document.getElementById('useFullWasm');
     const wasmEngineSelect = document.getElementById('wasmEngineSelect');
 
+    const enableFlash = document.getElementById('enableFlash');
+    const enablePsramA = document.getElementById('enablePsramA');
+    const enablePsramB = document.getElementById('enablePsramB');
+    const resetPmodsBtn = document.getElementById('resetPmods');
+    const loadFlashBtn = document.getElementById('loadFlashBtn');
+    const flashImageInput = document.getElementById('flashImageInput');
+    const flashStatus = document.getElementById('flashStatus');
+    const psramAStatus = document.getElementById('psramAStatus');
+    const psramBStatus = document.getElementById('psramBStatus');
+
+    const pmodManager = new PMODManager();
+
+    enableFlash.addEventListener('change', () => pmodManager.enabled.flash = enableFlash.checked);
+    enablePsramA.addEventListener('change', () => pmodManager.enabled.psramA = enablePsramA.checked);
+    enablePsramB.addEventListener('change', () => pmodManager.enabled.psramB = enablePsramB.checked);
+
+    resetPmodsBtn.addEventListener('click', () => {
+        pmodManager.flash.reset();
+        pmodManager.psramA.reset();
+        pmodManager.psramB.reset();
+        updatePmodStatus();
+        logToConsole("PMODs reset");
+    });
+
+    loadFlashBtn.addEventListener('click', () => flashImageInput.click());
+    flashImageInput.addEventListener('change', async (e) => {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const buffer = await file.arrayBuffer();
+            const data = new Uint8Array(buffer);
+            pmodManager.flash.memory.set(data.slice(0, pmodManager.flash.memory.length));
+            logToConsole(`Loaded ${data.length} bytes into Flash emulation`);
+        }
+    });
+
+    function updatePmodStatus() {
+        const update = (device, el) => {
+            if (!el) return;
+            let status = device.state;
+            if (device.state === 'READ_DATA' || device.state === 'WRITE_DATA' || device.state === 'ADDRESS' || device.state === 'DUMMY') {
+                status += ` @ 0x${device.address.toString(16).toUpperCase()}`;
+            }
+            if (device.qspiMode) status += " (QSPI)";
+            el.textContent = status;
+        };
+        update(pmodManager.flash, flashStatus);
+        update(pmodManager.psramA, psramAStatus);
+        update(pmodManager.psramB, psramBStatus);
+    }
+
     const uoOutResult = document.getElementById('uo_out_result');
     const uioOutResult = document.getElementById('uio_out_result');
     const uioOeResult = document.getElementById('uio_oe_result');
@@ -845,6 +895,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let serialBuffer = "";
 
     async function performTransaction(uiValue, uioInValue, clkVal, rstVal, enaVal, skipUpdate = false) {
+        // PMOD Emulation: Update PMOD state and get its output
+        // We do this BEFORE the transaction so PMOD output can influence uio_in
+        if (!isConnected) {
+            const pmodRes = pmodManager.update(uioInValue, 0); // Chip hasn't output yet, but PMODs might be driving
+            // If PMOD is driving, it overrides the value on that pin if the pin is an input
+            // For simplicity in this UI, we merge pmodRes.data into uioInValue where pmodRes.oe is set
+            uioInValue = (uioInValue & ~pmodRes.oe) | (pmodRes.data & pmodRes.oe);
+        }
+
         const timestamp = new Date().toLocaleTimeString();
 
         const oldClkVal = historyData.length > 0 ? historyData[historyData.length - 1].clk : 0;
@@ -906,6 +965,12 @@ document.addEventListener('DOMContentLoaded', () => {
             outputs = mockBoard(uiValue, uioInValue, clkVal, rstVal, enaVal);
             const sourceText = (useFullWasm.checked && wasmReady && digitalTwin) ? "WASM" : "XOR";
             logToConsole(`Received (Emulated ${sourceText}): uo_out=0x${outputs.uo_out.toString(16).padStart(2, '0').toUpperCase()}`);
+        }
+
+        // Post-transaction PMOD update to capture state changes from chip outputs
+        if (!isConnected) {
+            pmodManager.update(outputs.uio_out, outputs.uio_oe);
+            updatePmodStatus();
         }
 
         historyData.push({

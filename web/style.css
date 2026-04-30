@@ -529,3 +529,54 @@ button:disabled {
 .value-max {
     color: #8b0000;
 }
+
+.peripheral-panel h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.peripheral-controls {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.peripheral-device {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    min-width: 150px;
+    text-align: center;
+}
+
+.peripheral-device label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.device-status {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #007bff;
+}
+
+.peripheral-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#resetPmods {
+    background-color: #6c757d;
+}
+
+#loadFlashBtn {
+    background-color: #17a2b8;
+}
