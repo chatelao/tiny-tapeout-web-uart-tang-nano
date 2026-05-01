@@ -214,6 +214,29 @@
             </div>
         </div>
 
+        <div class="panel peripheral-panel">
+            <h2>Peripheral Emulation (QSPI PMOD)</h2>
+            <div class="peripheral-controls">
+                <div class="peripheral-device">
+                    <label><input type="checkbox" id="enableFlash" checked> Flash (CS0)</label>
+                    <div id="flashStatus" class="device-status">IDLE</div>
+                </div>
+                <div class="peripheral-device">
+                    <label><input type="checkbox" id="enablePsramA" checked> PSRAM A (CS1)</label>
+                    <div id="psramAStatus" class="device-status">IDLE</div>
+                </div>
+                <div class="peripheral-device">
+                    <label><input type="checkbox" id="enablePsramB" checked> PSRAM B (CS2)</label>
+                    <div id="psramBStatus" class="device-status">IDLE</div>
+                </div>
+            </div>
+            <div class="peripheral-actions">
+                <button id="resetPmods">Reset PMODs</button>
+                <button id="loadFlashBtn">Load Flash Image</button>
+                <input type="file" id="flashImageInput" style="display: none;">
+            </div>
+        </div>
+
         <div class="panel markdown-testset-panel">
             <h2>Markdown Test Cases</h2>
             <div class="testset-actions">
@@ -348,6 +371,7 @@
         </div>
 
     </div>
+    <script src="peripherals.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
